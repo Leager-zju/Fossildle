@@ -1,35 +1,36 @@
 import type { CSSProperties } from 'react'
-import { analyzeFossil, type Board, type Highlight } from '../lib/engine'
+import type { Board } from '../lib/engine'
+import { ROW_FLIP_MS } from '../lib/useRevealSequence'
 
 interface Props {
   board: Board
-  highlight?: Highlight
+  activeCells?: ReadonlySet<number>
   label?: string
-  animated?: boolean
+  revealedRows?: number
   miniature?: boolean
 }
-const COLORS = ['#a6583b', '#517870', '#a08b52', '#827398', '#52667c', '#b47a65']
 
-export function FossilArt({ board, highlight = 'none', label = '8×8 像素化石', animated = false, miniature = false }: Props) {
-  const metrics = analyzeFossil(board)
-  const holes = new Set(metrics.holes.flat())
-  const group = new Map<number, number>()
-  metrics.components.forEach((component, index) => component.forEach(cell => group.set(cell, index)))
+export function FossilArt({ board, activeCells, label = '8×8 像素化石', revealedRows = 8, miniature = false }: Props) {
   return (
-    <svg className={`fossil-art ${animated ? 'fossil-appearing' : ''} ${miniature ? 'miniature' : ''}`} viewBox="0 0 256 256" role="img" aria-label={label}>
+    <svg className={`fossil-art ${miniature ? 'miniature' : ''}`} viewBox="0 0 256 256" role="img" aria-label={revealedRows < 8 ? `化石正在逐行翻开，已完成 ${revealedRows}/8 行` : label} data-revealed-rows={revealedRows} style={{ '--row-flip-duration': `${ROW_FLIP_MS}ms` } as CSSProperties}>
       {Array.from({ length: 9 }, (_, i) => <g key={`grid-${i}`} stroke="currentColor" strokeWidth="0.55" opacity="0.11"><path d={`M ${16 + i * 28} 16 V 240 M 16 ${16 + i * 28} H 240`} /></g>)}
-      {board.map((filled, i) => {
-        const x = 18 + (i % 8) * 28
-        const y = 18 + Math.floor(i / 8) * 28
-        if (!filled) return holes.has(i) && highlight === 'holes' ? <rect key={i} x={x} y={y} width="24" height="24" rx="1" fill="#cfad5d" opacity="0.55" /> : <circle key={i} cx={x + 12} cy={y + 12} r="1" fill="currentColor" opacity="0.12" />
-        const fill = highlight === 'components' ? COLORS[(group.get(i) ?? 0) % COLORS.length] : highlight === 'holes' ? '#817867' : '#a35b3e'
-        return <g key={i} className="fossil-cell" style={{ '--cell-delay': `${i * 9}ms` } as CSSProperties}><rect x={x} y={y + 1.6} width="24" height="24" rx="1.4" fill="#5a4230" opacity="0.28" /><rect x={x} y={y} width="24" height="24" rx="1.4" fill={fill} /><path d={`M${x + 2} ${y + 2}h20`} stroke="#fff" opacity="0.2" /></g>
+      {Array.from({ length: 8 }, (_, row) => {
+        const state = row < revealedRows ? 'revealed' : row === revealedRows ? 'flipping' : 'covered'
+        return <g key={row} className={`fossil-row row-${state}`} data-row={row} data-state={state}>
+          {state !== 'covered' && <g className="row-front">
+            <rect x="17" y={17 + row * 28} width="222" height="26" fill="#f5f1e6" opacity="0.65" />
+            {board.slice(row * 8, row * 8 + 8).map((filled, column) => {
+              const i = row * 8 + column
+              const x = 18 + column * 28
+              const y = 18 + row * 28
+              if (!filled) return <circle key={i} cx={x + 12} cy={y + 12} r="1" fill="currentColor" opacity="0.12" />
+              const dimmed = revealedRows === 8 && activeCells !== undefined && !activeCells.has(i)
+              return <g key={i} className="fossil-cell" data-cell={i} data-dimmed={dimmed}><rect className="cell-shadow" x={x} y={y + 1.6} width="24" height="24" rx="1.4" fill={dimmed ? '#777770' : '#5a4230'} opacity="0.28" /><rect className="cell-fill" x={x} y={y} width="24" height="24" rx="1.4" fill={dimmed ? '#b2b2aa' : '#a35b3e'} /><path d={`M${x + 2} ${y + 2}h20`} stroke="#fff" opacity="0.2" /></g>
+            })}
+          </g>}
+          {state !== 'revealed' && <g className="row-back"><rect x="18" y={18 + row * 28} width="220" height="24" rx="2" fill="#c9bfa8" /><path d={`M24 ${25 + row * 28}H232 M29 ${35 + row * 28}H227`} stroke="#b2a68c" strokeWidth="1" opacity="0.65" /></g>}
+        </g>
       })}
-      {highlight === 'symmetry' && <g stroke="#517870" strokeWidth="1.5" strokeDasharray="4 4">
-        {metrics.mirrorX && <path d="M128 6V250" />}
-        {metrics.mirrorY && <path d="M6 128H250" />}
-        {metrics.quarterTurn && <circle cx="128" cy="128" r="111" />}
-      </g>}
       {!miniature && <g fill="currentColor" opacity="0.35" fontSize="7" fontFamily="monospace"><text x="6" y="11">A</text><text x="244" y="251">H</text><path d="M7 23V7h16M233 7h16v16M7 233v16h16M233 249h16v-16" fill="none" stroke="currentColor" strokeWidth="1" /></g>}
     </svg>
   )

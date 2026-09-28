@@ -1,4 +1,5 @@
-export const GENERATOR_VERSION = 1
+export const GENERATOR_VERSION = 2
+export type GeneratorVersion = 1 | 2
 export const SIZE = 8
 export type Board = boolean[]
 export type TraitGroup = 'connection' | 'cavity' | 'symmetry' | 'span' | 'layout' | 'combo'
@@ -85,7 +86,12 @@ const FOUR_NEIGHBORS = Array.from({ length: 64 }, (_, i) => neighbors(i))
 const EIGHT_NEIGHBORS = Array.from({ length: 64 }, (_, i) => neighbors(i, true))
 const isEdge = (i: number) => i < 8 || i >= 56 || i % 8 === 0 || i % 8 === 7
 
-export function generateFossil(seed: number): Board {
+export function generateFossil(bytes: Uint8Array = crypto.getRandomValues(new Uint8Array(8))): Board {
+  if (bytes.length !== 8) throw new Error('独立像素生成需要 8 个随机字节。')
+  return Array.from({ length: 64 }, (_, index) => (bytes[Math.floor(index / 8)] & (1 << (7 - index % 8))) !== 0)
+}
+
+export function generateLegacyFossil(seed: number): Board {
   const rng = randomSource(seed)
   const int = (min: number, max: number) => min + Math.floor(rng() * (max - min + 1))
   const board: Board = Array(64).fill(false)
@@ -206,6 +212,22 @@ export function calculateScore(traits: Trait[]): number {
     else best.set(trait.group, Math.max(best.get(trait.group) ?? 0, trait.points))
   })
   return [...best.values()].reduce((a, b) => a + b, 0) + Math.min(12, combo)
+}
+
+export function scoreBreakdown(traits: Trait[]) {
+  const best = new Map<TraitGroup, Trait>()
+  traits.filter(trait => trait.group !== 'combo').forEach(trait => {
+    if ((best.get(trait.group)?.points ?? -1) < trait.points) best.set(trait.group, trait)
+  })
+  let comboBudget = 12
+  return traits.map(trait => {
+    const winner = best.get(trait.group)
+    const awarded = trait.group === 'combo' ? Math.min(comboBudget, trait.points) : winner?.id === trait.id ? trait.points : 0
+    if (trait.group === 'combo') comboBudget -= awarded
+    const reason = awarded === trait.points ? (trait.group === 'combo' ? '组合加分' : '计入总分')
+      : trait.group === 'combo' ? '组合加分上限 12 分' : `同组由「${winner?.name}」计分`
+    return { trait, awarded, reason }
+  })
 }
 
 export function featuredTraits(traits: Trait[]): Trait[] {

@@ -1,0 +1,98 @@
+{
+  "generatorVersion": 2,
+  "scoringVersion": 1,
+  "samples": 1000000,
+  "seed": 4032109854,
+  "histogram": [
+    {
+      "score": 0,
+      "count": 838564
+    },
+    {
+      "score": 8,
+      "count": 61662
+    },
+    {
+      "score": 10,
+      "count": 65786
+    },
+    {
+      "score": 12,
+      "count": 728
+    },
+    {
+      "score": 16,
+      "count": 5241
+    },
+    {
+      "score": 18,
+      "count": 20362
+    },
+    {
+      "score": 20,
+      "count": 842
+    },
+    {
+      "score": 22,
+      "count": 392
+    },
+    {
+      "score": 26,
+      "count": 4776
+    },
+    {
+      "score": 28,
+      "count": 368
+    },
+    {
+      "score": 30,
+      "count": 271
+    },
+    {
+      "score": 32,
+      "count": 57
+    },
+    {
+      "score": 34,
+      "count": 678
+    },
+    {
+      "score": 36,
+      "count": 3
+    },
+    {
+      "score": 38,
+      "count": 63
+    },
+    {
+      "score": 40,
+      "count": 1
+    },
+    {
+      "score": 42,
+      "count": 156
+    },
+    {
+      "score": 46,
+      "count": 50
+    }
+  ],
+  "traitFrequencies": {
+    "connected": 2773,
+    "islands": 39397,
+    "eye": 83498,
+    "cavities": 7737,
+    "mirror-x": 0,
+    "mirror-y": 0,
+    "double-mirror": 0,
+    "rotation": 0,
+    "span": 59868,
+    "cross": 1814,
+    "interior": 0,
+    "centered": 915,
+    "ring": 0,
+    "symmetric-islands": 0,
+    "hidden-heart": 0,
+    "maze": 351
+  }
+}

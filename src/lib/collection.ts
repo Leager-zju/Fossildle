@@ -1,10 +1,10 @@
-import { fromHex, generateFossil, hashSeed, toHex } from './engine'
+import { fromHex, generateFossil, GENERATOR_VERSION, toHex, type GeneratorVersion } from './engine'
 
 export const STORAGE_KEY = 'fossildle.collection.v1'
 export interface Specimen {
   date: string
   hex: string
-  version: 1
+  version: GeneratorVersion
   favorite: boolean
 }
 export interface Collection {
@@ -12,12 +12,6 @@ export interface Collection {
   visitorId: string
   specimens: Specimen[]
 }
-export const MILESTONES = [
-  { id: 'days-1', name: '初见地层', days: 1, description: '完成第一次每日发现。' },
-  { id: 'days-7', name: '七日手记', days: 7, description: '累计探索 7 天，不要求连续。' },
-  { id: 'days-30', name: '月度观察员', days: 30, description: '累计探索 30 天，不要求连续。' },
-  { id: 'days-100', name: '时间收藏家', days: 100, description: '累计探索 100 天，不要求连续。' },
-]
 
 export function utcDate(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10)
@@ -35,7 +29,8 @@ export function validDate(value: unknown): value is string {
 export function validSpecimen(value: unknown): value is Specimen {
   if (!value || typeof value !== 'object') return false
   const item = value as Specimen
-  if (!validDate(item.date) || item.version !== 1 || typeof item.favorite !== 'boolean' || typeof item.hex !== 'string' || !/^[0-9a-f]{16}$/.test(item.hex)) return false
+  if (!validDate(item.date) || (item.version !== 1 && item.version !== 2) || typeof item.favorite !== 'boolean' || typeof item.hex !== 'string' || !/^[0-9a-f]{16}$/.test(item.hex)) return false
+  if (item.version === 2) return true
   const count = fromHex(item.hex).filter(Boolean).length
   return count >= 12 && count <= 36
 }
@@ -60,16 +55,19 @@ export function discover(collection: Collection, date: string): { collection: Co
   if (!validDate(date)) throw new Error('无效的发现日期。')
   const existing = collection.specimens.find(item => item.date === date)
   if (existing) return { collection, specimen: existing }
-  const board = generateFossil(hashSeed(`1:${collection.visitorId}:${date}`))
-  const specimen: Specimen = { date, hex: toHex(board), version: 1, favorite: false }
+  const board = generateFossil()
+  const specimen: Specimen = { date, hex: toHex(board), version: GENERATOR_VERSION, favorite: false }
   return { collection: { ...collection, specimens: [...collection.specimens, specimen].sort((a, b) => a.date.localeCompare(b.date)) }, specimen }
 }
+export function sameSpecimen(a: Specimen, b: Specimen): boolean {
+  return a.date === b.date && a.hex === b.hex && a.version === b.version
+}
 export function specimenHash(specimen: Specimen): string {
-  return `#specimen/v1/${specimen.date}/${specimen.hex}`
+  return `#specimen/v${specimen.version}/${specimen.date}/${specimen.hex}`
 }
 export function parseSpecimenHash(hash: string): Specimen | null {
-  const match = /^#specimen\/v1\/(\d{4}-\d{2}-\d{2})\/([0-9a-f]{16})$/.exec(hash)
+  const match = /^#specimen\/v([12])\/(\d{4}-\d{2}-\d{2})\/([0-9a-f]{16})$/.exec(hash)
   if (!match) return null
-  const specimen = { date: match[1], hex: match[2], favorite: false, version: 1 as const }
+  const specimen = { date: match[2], hex: match[3], favorite: false, version: Number(match[1]) as GeneratorVersion }
   return validSpecimen(specimen) ? specimen : null
 }

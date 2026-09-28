@@ -10,7 +10,7 @@ test('GitHub Pages 仓库子路径加载、刷新与分享', async ({ page }) =>
   await page.getByRole('button', { name: '发现今日化石', exact: true }).click()
   await page.getByRole('button', { name: '分享发现', exact: true }).click()
   const link = await page.getByLabel('只读分享链接').inputValue()
-  expect(link).toContain('/Fossildle/#specimen/v1/')
+  expect(link).toContain('/Fossildle/#specimen/v2/')
   await page.goto(link)
   await page.reload()
   await expect(page.getByRole('button', { name: '分享发现', exact: true })).toBeVisible()
@@ -21,12 +21,13 @@ test('GitHub Pages 仓库子路径加载、刷新与分享', async ({ page }) =>
   expect(failed).toEqual([])
 })
 
-test('三个结构中被去重的基础结构仍可展开', async ({ page }) => {
+test('自动展示全部命中结构及不重复计分的明细', async ({ page }) => {
   await page.goto('/#specimen/v1/2026-09-28/101010ff10101010')
-  await page.getByRole('button', { name: '查看全部 3 个结构' }).click()
-  await expect(page.locator('.trait-row strong').filter({ hasText: /^贯穿地层$/ })).toBeVisible()
-  await page.getByRole('button', { name: '收起结构' }).click()
-  await expect(page.locator('.trait-row strong').filter({ hasText: /^贯穿地层$/ })).toHaveCount(0)
+  await expect(page.locator('.field-notes')).toHaveAttribute('data-phase', 'complete')
+  await expect(page.locator('.trait-row')).toHaveCount(3)
+  await expect(page.locator('[data-trait="span"]')).toHaveAttribute('data-awarded', '0')
+  await expect(page.locator('[data-trait="cross"]')).toHaveAttribute('data-awarded', '12')
+  await expect(page.getByTestId('structure-score')).toHaveText('22分')
 })
 
 test('首次并发访问共享身份，不重置已有记录', async ({ context, page }) => {

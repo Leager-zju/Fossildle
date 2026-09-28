@@ -5,12 +5,14 @@ import { Cabinet, FieldGuide } from './components/CollectionPages'
 import { About } from './components/About'
 import { Modal } from './components/Modal'
 import { FossilArt } from './components/FossilArt'
-import { createCollection, discover, MILESTONES, parseCollection, parseSpecimenHash, readCollection, saveCollection, STORAGE_KEY, utcDate, type Collection, type Specimen } from './lib/collection'
+import { createCollection, discover, parseCollection, parseSpecimenHash, readCollection, sameSpecimen, saveCollection, STORAGE_KEY, utcDate, type Collection, type Specimen } from './lib/collection'
+import { TRAITS } from './lib/engine'
 import { describeSpecimen } from './lib/rarity'
 import { createShareImage, downloadBlob, shareText, shareUrl } from './lib/share'
+import { assertCurrentLocalBuild, initializeCollection, LOCAL_BUILD, LOCAL_BUILD_KEY } from './lib/localMode'
 
 function loadInitial(): { collection: Collection; error: string | null } {
-  try { return { collection: readCollection(), error: null } }
+  try { return { collection: LOCAL_BUILD ? createCollection() : readCollection(), error: null } }
   catch { return { collection: createCollection(), error: '本地存储不可用或记录损坏。为保护原记录，发现已暂停。请允许浏览器存储，或在「关于」导入有效备份。' } }
 }
 function LogoMark() {
@@ -33,15 +35,15 @@ export default function App() {
   const mainRef = useRef<HTMLElement>(null)
   const todaySpecimen = collection.specimens.find(specimen => specimen.date === date)
   const sharedRecord = useMemo(() => parseSpecimenHash(route), [route])
-  const ownedShared = sharedRecord && collection.specimens.find(item => item.date === sharedRecord.date && item.hex === sharedRecord.hex)
-  const totalUnlocked = useMemo(() => new Set(collection.specimens.flatMap(item => describeSpecimen(item).traits.map(trait => trait.id))).size + MILESTONES.filter(item => collection.specimens.length >= item.days).length, [collection])
+  const ownedShared = sharedRecord && collection.specimens.find(item => sameSpecimen(item, sharedRecord))
+  const totalUnlocked = useMemo(() => new Set(collection.specimens.flatMap(item => describeSpecimen(item).traits.map(trait => trait.id))).size, [collection])
 
   useEffect(() => {
     const change = () => { setRoute(window.location.hash || '#today'); window.scrollTo(0, 0); mainRef.current?.focus() }
     const sync = (event: StorageEvent) => {
-      if (event.key !== STORAGE_KEY && event.key !== null) return
-      try { setCollection(readCollection()); setStorageError(null) }
-      catch { setStorageError('无法读取其他标签页更新的存档。请先导出原始记录或恢复备份。') }
+      if (event.key !== STORAGE_KEY && event.key !== LOCAL_BUILD_KEY && event.key !== null) return
+      try { assertCurrentLocalBuild(); setCollection(readCollection()); setStorageError(null) }
+      catch { setStorageError('存档无法同步或本地版本已更新，请刷新页面；必要时在「关于」恢复备份。') }
     }
     window.addEventListener('hashchange', change)
     window.addEventListener('storage', sync)
@@ -66,20 +68,17 @@ export default function App() {
   const [initializing, setInitializing] = useState(true)
   useEffect(() => {
     let active = true
-    void withStorageLock(() => {
-      const current = readCollection()
-      saveCollection(current)
-      return current
-    }).then(current => {
+    void withStorageLock(() => initializeCollection()).then(current => {
       if (active) { setCollection(current); setStorageError(null) }
     }).catch(() => {
-      if (active) setStorageError('本地存储不可用或记录损坏。发现已暂停，请检查存储权限或在「关于」恢复备份。')
+      if (active) setStorageError('本地存储不可用或记录损坏，或本地版本已更新。发现已暂停，请刷新页面或在「关于」恢复备份。')
     }).finally(() => { if (active) setInitializing(false) })
     return () => { active = false }
   }, [withStorageLock])
 
   const updateCollection = useCallback(async (updater: (current: Collection) => Collection) => {
     return withStorageLock(() => {
+      assertCurrentLocalBuild()
       const next = updater(readCollection())
       saveCollection(next)
       setCollection(next)
@@ -105,7 +104,7 @@ export default function App() {
   }
   const handleFavorite = async (specimen: Specimen) => {
     try {
-      await updateCollection(current => ({ ...current, specimens: current.specimens.map(item => item.date === specimen.date && item.hex === specimen.hex ? { ...item, favorite: !item.favorite } : item) }))
+      await updateCollection(current => ({ ...current, specimens: current.specimens.map(item => sameSpecimen(item, specimen) ? { ...item, favorite: !item.favorite } : item) }))
     } catch { setToast('珍藏标记保存失败，请检查浏览器存储。') }
   }
   const handleExport = () => {
@@ -127,7 +126,7 @@ export default function App() {
     if (!pendingImport || importBusy) return
     setImportBusy(true)
     try {
-      await withStorageLock(() => { saveCollection(pendingImport); setCollection(pendingImport); setStorageError(null) })
+      await withStorageLock(() => { assertCurrentLocalBuild(); saveCollection(pendingImport); setCollection(pendingImport); setStorageError(null) })
       setPendingImport(null)
       setToast('藏馆已恢复。新发现将沿用备份中的本地身份。')
     } catch { setToast('恢复失败，当前浏览器无法写入存档。') }
@@ -166,11 +165,12 @@ export default function App() {
     <header className="site-header"><div className="header-inner"><a href="#today" className="brand" aria-label="Fossildle 首页"><span className="brand-symbol"><LogoMark /></span><span>Fossildle<small>像素地层观察站</small></span></a><nav className="main-nav" aria-label="主导航">{navigation.map(({ href, name, Icon }) => <a key={href} href={href} className={(route === href || (href === '#today' && sharedRecord)) ? 'active' : ''} aria-current={route === href ? 'page' : undefined}><Icon size={15} /><span>{name}</span>{href === '#cabinet' && collection.specimens.length > 0 && <small>{collection.specimens.length}</small>}</a>)}</nav><div className="header-right"><span className={`daily-status ${todaySpecimen ? 'complete' : ''}`}><span />{todaySpecimen ? '今日已发现' : '今天，新的可能'}</span><a href="#about" className={`icon-button ${route === '#about' ? 'active' : ''}`} aria-label="关于与游戏规则"><Info size={19} strokeWidth={1.5} /></a></div></div></header>
 
     <main id="main-content" ref={mainRef} tabIndex={-1}>
+      {LOCAL_BUILD && <div className="local-build-note"><Pickaxe size={14} /><span>本地调试 · 重新构建或重启开发服务后重置收藏，可重新抽取；本轮刷新保留结果，不影响线上存档。</span></div>}
       {storageError && <div className="storage-warning" role="alert"><Info size={18} /><p>{storageError}</p><a href="#about">备份与恢复 <ArrowRight size={14} /></a></div>}
-      {isDiscovery ? <Discovery key={sharedRecord ? route : date} collection={collection} specimen={busy && !sharedRecord ? undefined : ownedShared || sharedRecord || todaySpecimen} date={date} isShared={!!sharedRecord && !ownedShared} isArchive={!!ownedShared} busy={busy} disabled={!!storageError || initializing} onDiscover={() => void handleDiscover()} onFavorite={specimen => void handleFavorite(specimen)} onShare={setShareSpecimen} /> : route === '#cabinet' ? <Cabinet collection={collection} onFavorite={specimen => void handleFavorite(specimen)} onExport={handleExport} /> : route === '#fieldguide' ? <FieldGuide collection={collection} /> : route === '#about' ? <About onExport={handleExport} onImport={file => void handleImportFile(file)} /> : <section className="empty-state"><BookOpen size={36} /><h1>这页手记，还没有被发现。</h1><p>链接可能不完整，或来自尚不支持的规则版本。</p><a className="button button-primary" href="#today">返回今日地层 <ArrowRight size={16} /></a></section>}
+      {isDiscovery ? <Discovery key={sharedRecord ? route : date} collection={collection} specimen={busy && !sharedRecord ? undefined : ownedShared || sharedRecord || todaySpecimen} date={date} isShared={!!sharedRecord && !ownedShared} isArchive={!!ownedShared} busy={busy} disabled={!!storageError || initializing} onDiscover={() => void handleDiscover()} onShare={setShareSpecimen} /> : route === '#cabinet' ? <Cabinet collection={collection} onFavorite={specimen => void handleFavorite(specimen)} onExport={handleExport} /> : route === '#fieldguide' ? <FieldGuide collection={collection} /> : route === '#about' ? <About onExport={handleExport} onImport={file => void handleImportFile(file)} /> : <section className="empty-state"><BookOpen size={36} /><h1>这页手记，还没有被发现。</h1><p>链接可能不完整，或来自尚不支持的规则版本。</p><a className="button button-primary" href="#today">返回今日地层 <ArrowRight size={16} /></a></section>}
     </main>
 
-    <footer className="site-footer"><div className="footer-brand"><LogoMark /><span>Fossildle<small>A LITTLE PIECE OF TIME.</small></span></div><p>慢一点，看看偶然留下了什么。</p><div><span><ShieldCheck size={13} /> 本地保存</span><a href="#fieldguide">图鉴 {totalUnlocked}/20</a><a href="#about">规则与备份 <ArrowRight size={12} /></a></div></footer>
+    <footer className="site-footer"><div className="footer-brand"><LogoMark /><span>Fossildle<small>A LITTLE PIECE OF TIME.</small></span></div><p>慢一点，看看偶然留下了什么。</p><div><span><ShieldCheck size={13} /> 本地保存</span><a href="#fieldguide">图鉴 {totalUnlocked}/{TRAITS.length}</a><a href="#about">规则与备份 <ArrowRight size={12} /></a></div></footer>
     {toast && <div className="toast" role="status"><Check size={16} /><span>{toast}</span><button className="icon-button" aria-label="关闭提示" onClick={() => setToast('')}><X size={15} /></button></div>}
     {shareSpecimen && shareData && <Modal title="让这次偶然，被更多人看见。" onClose={() => setShareSpecimen(null)}><div className="share-preview"><div className="share-preview-header"><span>Fossildle</span><small>{shareSpecimen.date}</small></div><FossilArt board={shareData.board} miniature label={shareData.name} /><h3>{shareData.name}</h3><span className={`rarity rarity-${shareData.rarity.id}`}>{shareData.rarity.name}</span><p>{shareData.description}</p></div><div className="share-controls"><button className="button button-primary" disabled={shareBusy} onClick={() => void exportImage()}>{shareBusy ? <LoaderCircle size={16} className="spin" /> : <Download size={16} />} 保存图片</button><button className="button button-outline" onClick={() => void copyLink()}><Copy size={16} /> 复制链接</button><button className="icon-button share-native" disabled={shareBusy} onClick={() => void systemShare()} aria-label="系统分享"><Share2 size={18} /></button></div><label className="share-link-label">只读链接<input readOnly value={shareUrl(shareSpecimen)} aria-label="只读分享链接" onFocus={event => event.target.select()} /></label><p className="modal-note">只分享这枚化石，不包含你的身份或整座藏馆。结果由本地生成，未经服务器认证。<a href={shareUrl(shareSpecimen)} target="_blank" rel="noreferrer">预览分享页 <ExternalLink size={12} /></a></p></Modal>}
     {pendingImport && <Modal title="恢复这份藏馆备份？" onClose={() => { if (!importBusy) setPendingImport(null) }}><div className="import-summary"><Download size={30} /><strong>{pendingImport.specimens.length} 枚化石</strong><p>恢复会替换当前浏览器中的 {collection.specimens.length} 枚化石和本地身份，不会自动合并。建议先导出现有藏馆。</p></div><div className="import-actions"><button className="button button-outline" onClick={handleExport}>先备份当前藏馆</button><button className="button button-primary" disabled={importBusy} onClick={() => void confirmImport()}>{importBusy ? '正在恢复…' : '确认替换并恢复'}</button></div></Modal>}

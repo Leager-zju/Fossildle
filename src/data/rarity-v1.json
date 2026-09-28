@@ -1,0 +1,178 @@
+{
+  "generatorVersion": 1,
+  "scoringVersion": 1,
+  "samples": 1000000,
+  "seed": 4032109854,
+  "histogram": [
+    {
+      "score": 0,
+      "count": 427147
+    },
+    {
+      "score": 6,
+      "count": 13
+    },
+    {
+      "score": 8,
+      "count": 9391
+    },
+    {
+      "score": 10,
+      "count": 193915
+    },
+    {
+      "score": 12,
+      "count": 48
+    },
+    {
+      "score": 16,
+      "count": 3197
+    },
+    {
+      "score": 18,
+      "count": 56382
+    },
+    {
+      "score": 20,
+      "count": 65701
+    },
+    {
+      "score": 22,
+      "count": 77079
+    },
+    {
+      "score": 26,
+      "count": 1414
+    },
+    {
+      "score": 28,
+      "count": 29195
+    },
+    {
+      "score": 30,
+      "count": 14856
+    },
+    {
+      "score": 32,
+      "count": 7218
+    },
+    {
+      "score": 34,
+      "count": 4809
+    },
+    {
+      "score": 36,
+      "count": 34
+    },
+    {
+      "score": 38,
+      "count": 1106
+    },
+    {
+      "score": 40,
+      "count": 81787
+    },
+    {
+      "score": 42,
+      "count": 4253
+    },
+    {
+      "score": 44,
+      "count": 191
+    },
+    {
+      "score": 46,
+      "count": 4496
+    },
+    {
+      "score": 48,
+      "count": 6231
+    },
+    {
+      "score": 50,
+      "count": 4784
+    },
+    {
+      "score": 52,
+      "count": 719
+    },
+    {
+      "score": 54,
+      "count": 123
+    },
+    {
+      "score": 56,
+      "count": 1336
+    },
+    {
+      "score": 58,
+      "count": 1168
+    },
+    {
+      "score": 60,
+      "count": 1131
+    },
+    {
+      "score": 62,
+      "count": 82
+    },
+    {
+      "score": 64,
+      "count": 6
+    },
+    {
+      "score": 66,
+      "count": 689
+    },
+    {
+      "score": 68,
+      "count": 690
+    },
+    {
+      "score": 70,
+      "count": 42
+    },
+    {
+      "score": 72,
+      "count": 258
+    },
+    {
+      "score": 74,
+      "count": 203
+    },
+    {
+      "score": 76,
+      "count": 223
+    },
+    {
+      "score": 78,
+      "count": 18
+    },
+    {
+      "score": 80,
+      "count": 62
+    },
+    {
+      "score": 86,
+      "count": 3
+    }
+  ],
+  "traitFrequencies": {
+    "eye": 121805,
+    "mirror-x": 101365,
+    "mirror-y": 101166,
+    "double-mirror": 51122,
+    "centered": 103781,
+    "symmetric-islands": 147871,
+    "connected": 355798,
+    "span": 126652,
+    "rotation": 50824,
+    "islands": 10150,
+    "interior": 8007,
+    "hidden-heart": 3794,
+    "cavities": 11375,
+    "maze": 9203,
+    "cross": 6180,
+    "ring": 1963
+  }
+}

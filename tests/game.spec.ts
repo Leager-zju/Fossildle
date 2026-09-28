@@ -1,0 +1,95 @@
+import { test, expect } from '@playwright/test'
+
+const key = 'fossildle.collection.v1'
+
+test('每日发现、珍藏、刷新、图鉴和图片分享', async ({ page }, testInfo) => {
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.goto('/')
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('时间藏起的')
+  await page.screenshot({ path: testInfo.outputPath('homepage.png'), fullPage: true })
+  await page.getByRole('button', { name: '发现今日化石', exact: true }).click()
+  await expect(page.getByRole('button', { name: '分享发现', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: '发现今日化石', exact: true })).toHaveCount(0)
+  const record = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).specimens[0], key)
+  await page.reload()
+  await expect(page.getByRole('button', { name: '分享发现', exact: true })).toBeVisible()
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).specimens, key)).toHaveLength(1)
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).specimens[0].hex, key)).toBe(record.hex)
+  await page.getByRole('button', { name: '加入珍藏', exact: true }).click()
+  await expect(page.getByRole('button', { name: '取消珍藏', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: '连通', exact: true }).click()
+  await expect(page.getByRole('button', { name: '连通', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await page.screenshot({ path: testInfo.outputPath('discovery.png'), fullPage: true })
+  await page.getByRole('button', { name: '分享发现', exact: true }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await expect(page.getByLabel('只读分享链接')).toHaveValue(/#specimen\/v1\//)
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: '保存图片' }).click()
+  const download = await downloadPromise
+  expect(download.suggestedFilename()).toMatch(/^fossildle-.*\.png$/)
+  expect(await download.failure()).toBeNull()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).not.toBeVisible()
+  await page.getByRole('link', { name: /我的藏馆/ }).click()
+  await expect(page.locator('.specimen-tile')).toHaveCount(1)
+  await page.getByLabel('搜索化石').fill('不会存在的名字')
+  await expect(page.getByText('还没有符合条件的化石')).toBeVisible()
+  await page.getByRole('button', { name: '清除筛选' }).click()
+  await expect(page.locator('.specimen-tile')).toHaveCount(1)
+  await page.getByRole('link', { name: '结构图鉴', exact: true }).click()
+  await expect(page.locator('.guide-card')).toHaveCount(16)
+  await expect(page.locator('.milestone.achieved')).toHaveCount(1)
+  await page.screenshot({ path: testInfo.outputPath('fieldguide.png'), fullPage: true })
+  expect(errors).toEqual([])
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+})
+
+test('只读分享不添加收藏，非法链接安全回退', async ({ page }) => {
+  await page.goto('/#specimen/v1/2026-09-28/00003c24243c0000')
+  await expect(page.getByRole('heading', { name: /一枚化石/ })).toBeVisible()
+  await expect(page.getByText('只读分享 · 不会加入你的收藏')).toBeVisible()
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).specimens.length, key)).toBe(0)
+  await expect(page.getByRole('button', { name: '加入珍藏', exact: true })).toHaveCount(0)
+  await page.reload()
+  await expect(page.getByRole('button', { name: '分享发现', exact: true })).toBeVisible()
+  await page.goto('/#specimen/v1/2026-02-30/ffffffffffffffff')
+  await expect(page.getByRole('heading', { name: '这页手记，还没有被发现。' })).toBeVisible()
+})
+
+test('多个标签页同步，重复开启不产生第二枚', async ({ page, context }) => {
+  await page.goto('/')
+  const second = await context.newPage()
+  await second.goto('/')
+  await page.getByRole('button', { name: '发现今日化石', exact: true }).click()
+  await expect(second.getByRole('button', { name: '分享发现', exact: true })).toBeVisible()
+  await page.reload()
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).specimens.length, key)).toBe(1)
+  await second.close()
+})
+
+test('备份导入须确认，损坏存档不被覆盖', async ({ page }) => {
+  await page.goto('/')
+  await page.evaluate(key => localStorage.setItem(key, '{invalid-json'), key)
+  await page.reload()
+  await expect(page.getByRole('alert')).toContainText('本地存储不可用或记录损坏')
+  await expect(page.getByRole('button', { name: '发现今日化石', exact: true })).toBeDisabled()
+  expect(await page.evaluate(key => localStorage.getItem(key), key)).toBe('{invalid-json')
+  await page.goto('/#about')
+  const fixture = { schemaVersion: 1, visitorId: 'restored-test-identity', specimens: [{ date: '2026-09-28', hex: '00003c24243c0000', version: 1, favorite: true }] }
+  await page.getByLabel('选择藏馆备份').setInputFiles({ name: 'backup.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(fixture)) })
+  await expect(page.getByRole('dialog')).toBeVisible()
+  expect(await page.evaluate(key => localStorage.getItem(key), key)).toBe('{invalid-json')
+  await page.getByRole('button', { name: '确认替换并恢复' }).click()
+  await expect(page.getByRole('dialog')).not.toBeVisible()
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).specimens.length, key)).toBe(1)
+})
+
+test('移动端和桌面首页没有横向溢出', async ({ page }) => {
+  for (const hash of ['', '#cabinet', '#fieldguide', '#about']) {
+    await page.goto(`/${hash}`)
+    await expect(page.locator('main')).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  }
+})

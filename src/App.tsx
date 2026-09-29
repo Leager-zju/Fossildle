@@ -6,10 +6,11 @@ import { About } from './components/About'
 import { Modal } from './components/Modal'
 import { FossilArt } from './components/FossilArt'
 import { createCollection, discover, parseCollection, parseSpecimenHash, readCollection, sameSpecimen, saveCollection, STORAGE_KEY, utcDate, type Collection, type Specimen } from './lib/collection'
-import { TRAITS } from './lib/engine'
+import { revealEntryCount, TRAITS } from './lib/engine'
 import { describeSpecimen } from './lib/rarity'
 import { createShareImage, downloadBlob, shareText, shareUrl } from './lib/share'
-import { assertCurrentLocalBuild, initializeCollection, LOCAL_BUILD, LOCAL_BUILD_KEY } from './lib/localMode'
+import { assertCurrentLocalBuild, initializeCollection, LOCAL_BUILD, LOCAL_BUILD_KEY, UNLOCK_ALL } from './lib/localMode'
+import { revealKey, startRevealSequence } from './lib/useRevealSequence'
 
 function loadInitial(): { collection: Collection; error: string | null } {
   try { return { collection: LOCAL_BUILD ? createCollection() : readCollection(), error: null } }
@@ -27,6 +28,7 @@ export default function App() {
   const [date, setDate] = useState(utcDate)
   const [busy, setBusy] = useState(false)
   const discoverLock = useRef(false)
+  const revealToastPending = useRef<Specimen | null>(null)
   const [toast, setToast] = useState('')
   const [shareSpecimen, setShareSpecimen] = useState<Specimen | null>(null)
   const [shareBusy, setShareBusy] = useState(false)
@@ -36,7 +38,7 @@ export default function App() {
   const todaySpecimen = collection.specimens.find(specimen => specimen.date === date)
   const sharedRecord = useMemo(() => parseSpecimenHash(route), [route])
   const ownedShared = sharedRecord && collection.specimens.find(item => sameSpecimen(item, sharedRecord))
-  const totalUnlocked = useMemo(() => new Set(collection.specimens.flatMap(item => describeSpecimen(item).traits.map(trait => trait.id))).size, [collection])
+  const totalUnlocked = useMemo(() => UNLOCK_ALL ? TRAITS.length : new Set(collection.specimens.flatMap(item => describeSpecimen(item).traits.map(trait => trait.id))).size, [collection])
 
   useEffect(() => {
     const change = () => { setRoute(window.location.hash || '#today'); window.scrollTo(0, 0); mainRef.current?.focus() }
@@ -94,14 +96,21 @@ export default function App() {
     try {
       const discoveryDate = utcDate()
       setDate(discoveryDate)
-      await updateCollection(current => discover(current, discoveryDate).collection)
+      const next = await updateCollection(current => discover(current, discoveryDate).collection)
+      const specimen = next.specimens.find(item => item.date === discoveryDate)!
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
       await new Promise(resolve => window.setTimeout(resolve, reduced ? 80 : 1500))
-      setToast('今日发现已收入藏馆。仔细看看，它藏着哪些结构？')
+      revealToastPending.current = specimen
+      startRevealSequence(revealKey(specimen), revealEntryCount(describeSpecimen(specimen).traits))
     } catch {
       setStorageError('无法保存这次发现。请检查浏览器存储权限或可用空间；原有存档不会被覆盖。')
     } finally { setBusy(false); discoverLock.current = false }
   }
+  const handleRevealComplete = useCallback((specimen: Specimen) => {
+    if (!revealToastPending.current || !sameSpecimen(revealToastPending.current, specimen)) return
+    revealToastPending.current = null
+    setToast('今日发现已收入藏馆。仔细看看，它藏着哪些结构？')
+  }, [])
   const handleFavorite = async (specimen: Specimen) => {
     try {
       await updateCollection(current => ({ ...current, specimens: current.specimens.map(item => sameSpecimen(item, specimen) ? { ...item, favorite: !item.favorite } : item) }))
@@ -167,7 +176,7 @@ export default function App() {
     <main id="main-content" ref={mainRef} tabIndex={-1}>
       {LOCAL_BUILD && <div className="local-build-note"><Pickaxe size={14} /><span>本地调试 · 重新构建或重启开发服务后重置收藏，可重新抽取；本轮刷新保留结果，不影响线上存档。</span></div>}
       {storageError && <div className="storage-warning" role="alert"><Info size={18} /><p>{storageError}</p><a href="#about">备份与恢复 <ArrowRight size={14} /></a></div>}
-      {isDiscovery ? <Discovery key={sharedRecord ? route : date} collection={collection} specimen={busy && !sharedRecord ? undefined : ownedShared || sharedRecord || todaySpecimen} date={date} isShared={!!sharedRecord && !ownedShared} isArchive={!!ownedShared} busy={busy} disabled={!!storageError || initializing} onDiscover={() => void handleDiscover()} onShare={setShareSpecimen} /> : route === '#cabinet' ? <Cabinet collection={collection} onFavorite={specimen => void handleFavorite(specimen)} onExport={handleExport} /> : route === '#fieldguide' ? <FieldGuide collection={collection} /> : route === '#about' ? <About onExport={handleExport} onImport={file => void handleImportFile(file)} /> : <section className="empty-state"><BookOpen size={36} /><h1>这页手记，还没有被发现。</h1><p>链接可能不完整，或来自尚不支持的规则版本。</p><a className="button button-primary" href="#today">返回今日地层 <ArrowRight size={16} /></a></section>}
+      {isDiscovery ? <Discovery key={sharedRecord ? route : date} collection={collection} specimen={busy && !sharedRecord ? undefined : ownedShared || sharedRecord || todaySpecimen} date={date} isShared={!!sharedRecord && !ownedShared} isArchive={!!ownedShared} busy={busy} disabled={!!storageError || initializing} onDiscover={() => void handleDiscover()} onShare={setShareSpecimen} onRevealComplete={handleRevealComplete} /> : route === '#cabinet' ? <Cabinet collection={collection} onFavorite={specimen => void handleFavorite(specimen)} onExport={handleExport} /> : route === '#fieldguide' ? <FieldGuide collection={collection} /> : route === '#about' ? <About onExport={handleExport} onImport={file => void handleImportFile(file)} /> : <section className="empty-state"><BookOpen size={36} /><h1>这页手记，还没有被发现。</h1><p>链接可能不完整，或来自尚不支持的规则版本。</p><a className="button button-primary" href="#today">返回今日地层 <ArrowRight size={16} /></a></section>}
     </main>
 
     <footer className="site-footer"><div className="footer-brand"><LogoMark /><span>Fossildle<small>A LITTLE PIECE OF TIME.</small></span></div><p>慢一点，看看偶然留下了什么。</p><div><span><ShieldCheck size={13} /> 本地保存</span><a href="#fieldguide">图鉴 {totalUnlocked}/{TRAITS.length}</a><a href="#about">规则与备份 <ArrowRight size={12} /></a></div></footer>

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { analyzeFossil, evaluateTraits, fromHex } from '../src/lib/engine'
 
 const key = 'fossildle.collection.v1'
 const ring = '00003c24243c0000'
@@ -12,12 +13,12 @@ test('底栏倒计时居中分享靠右，结构稀有度位于名称与新图�
   await expect(page.locator('.field-notes')).toHaveAttribute('data-phase', 'complete')
   await expect(page.locator('.specimen-caption')).toHaveCount(0)
   await expect(page.locator('.card-bottomline .bottomline-share')).toBeEnabled()
-  await expect(page.locator('.score-entry .trait-name + .trait-rarity + .new-trait')).toHaveCount(10)
+  await expect(page.locator('.score-entry .trait-name + .trait-rarity + .new-trait')).toHaveCount(evaluateTraits(analyzeFossil(fromHex(ring))).length)
   await expect(page.locator('[data-trait="mirror-x"] .trait-rarity')).toHaveText('典藏')
-  await expect(page.locator('[data-trait="connected"] .trait-rarity')).toHaveText('珍奇')
+  await expect(page.locator('[data-trait="connected"] > .score-entry-head .trait-rarity')).toHaveText('珍奇')
   await expect(page.locator('[data-trait="ring"] .trait-rarity')).toHaveAttribute('title', /未观测到/)
   await expect(page.locator('.score-total .overall-rarity')).toHaveCount(1)
-  await expect(page.getByTestId('structure-score')).toHaveText('72分')
+  await expect(page.getByTestId('structure-score')).toHaveText('140分')
   for (const width of [testInfo.project.name === 'mobile' ? 390 : 1440, 320, 700]) {
     await page.setViewportSize({ width, height: 1000 })
     await expect.poll(() => page.locator('.card-bottomline').evaluate(bar => {
@@ -79,11 +80,11 @@ test('旧 v1 记录不被同图案 v2 分享认领，原分享与备份仍可读
   await expect(page.getByText('只读分享 · 不会加入你的收藏')).toBeVisible()
   await expect(page.locator('.score-entry .new-trait')).toHaveCount(0)
   await expect(page.locator('.field-notes')).toHaveAttribute('data-phase', 'complete')
-  await expect(page.locator('[data-trait="connected"] .trait-rarity')).toHaveText('珍奇')
+  await expect(page.locator('[data-trait="connected"] > .score-entry-head .trait-rarity')).toHaveText('珍奇')
   await page.goto(`/#specimen/v1/2026-09-28/${ring}`)
   await expect(page.getByText('来自你的藏馆')).toBeVisible()
   await expect(page.locator('.field-notes')).toHaveAttribute('data-phase', 'complete')
-  await expect(page.locator('[data-trait="connected"] .trait-rarity')).toHaveText('特别')
+  await expect(page.locator('[data-trait="connected"] > .score-entry-head .trait-rarity')).toHaveText('特别')
   expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).specimens[0], key)).toEqual(legacy)
   await page.getByRole('button', { name: '分享发现', exact: true }).click()
   await expect(page.getByLabel('只读分享链接')).toHaveValue(/#specimen\/v1\//)

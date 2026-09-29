@@ -1,8 +1,18 @@
+import { CATALOGUE_TRAITS, detectCatalogue, type CatalogueMatches } from './catalogueTraits'
+import { COVERED_BY } from './families'
+import { structurePoints } from './traitPoints'
+
 export const GENERATOR_VERSION = 2
+export const SCORING_VERSION = 5
 export type GeneratorVersion = 1 | 2
 export const SIZE = 8
 export type Board = boolean[]
-export type TraitGroup = 'connection' | 'cavity' | 'symmetry' | 'span' | 'layout' | 'combo'
+export const TRAIT_GROUPS = {
+  connection: '连通星群', cavity: '空洞秘境', symmetry: '对称回声', span: '贯穿脉络',
+  layout: '空间布局', combo: '组合奇遇', geometry: '几何遗形', texture: '地层纹理',
+  boundary: '边界风景', population: '疏密节律',
+} as const
+export type TraitGroup = keyof typeof TRAIT_GROUPS
 export type Highlight = 'none' | 'components' | 'holes' | 'symmetry'
 
 export interface Metrics {
@@ -16,6 +26,7 @@ export interface Metrics {
   fullColumn: boolean
   interior: boolean
   centered: boolean
+  readonly catalogue: CatalogueMatches
 }
 
 export interface Trait {
@@ -25,27 +36,33 @@ export interface Trait {
   group: TraitGroup
   points: number
   highlight: Highlight
+  cells?: (metrics: Metrics) => readonly number[]
   matches: (metrics: Metrics) => boolean
 }
 
 export const TRAITS: Trait[] = [
-  { id: 'connected', name: '一体遗存', description: '所有化石像素通过上下左右连接，恰好形成一个连通块。', group: 'connection', points: 10, highlight: 'components', matches: m => m.components.length === 1 },
-  { id: 'islands', name: '三座遗迹', description: '化石恰好由三个互不相连的连通块组成。', group: 'connection', points: 8, highlight: 'components', matches: m => m.components.length === 3 },
-  { id: 'eye', name: '封存之眼', description: '恰好一个空白区域无法通过八邻接到达棋盘外部。', group: 'cavity', points: 10, highlight: 'holes', matches: m => m.holes.length === 1 },
-  { id: 'cavities', name: '重重空腔', description: '化石中封存了至少两个彼此独立的空白区域。', group: 'cavity', points: 18, highlight: 'holes', matches: m => m.holes.length >= 2 },
-  { id: 'mirror-x', name: '左右镜像', description: '关于整个棋盘的垂直中线，左右像素完全重合。', group: 'symmetry', points: 16, highlight: 'symmetry', matches: m => m.mirrorX },
-  { id: 'mirror-y', name: '上下镜像', description: '关于整个棋盘的水平中线，上下像素完全重合。', group: 'symmetry', points: 16, highlight: 'symmetry', matches: m => m.mirrorY },
-  { id: 'double-mirror', name: '双轴对称', description: '同时关于整个棋盘的水平中线与垂直中线对称。', group: 'symmetry', points: 24, highlight: 'symmetry', matches: m => m.mirrorX && m.mirrorY },
-  { id: 'rotation', name: '四向回转', description: '围绕棋盘中心旋转 90° 后，图案保持不变。', group: 'symmetry', points: 30, highlight: 'symmetry', matches: m => m.quarterTurn },
-  { id: 'span', name: '贯穿地层', description: '至少一整行或一整列都被化石像素填满。', group: 'span', points: 8, highlight: 'none', matches: m => m.fullRow || m.fullColumn },
-  { id: 'cross', name: '十字贯穿', description: '同时存在至少一整行和一整列被填满。', group: 'span', points: 12, highlight: 'none', matches: m => m.fullRow && m.fullColumn },
-  { id: 'interior', name: '深藏其中', description: '所有化石像素都不接触棋盘的四条边缘。', group: 'layout', points: 6, highlight: 'none', matches: m => m.interior },
-  { id: 'centered', name: '重心居中', description: '所有化石像素的平均坐标恰好位于棋盘中心。', group: 'layout', points: 10, highlight: 'none', matches: m => m.centered },
-  { id: 'ring', name: '独眼之环', description: '一个连通块、一个空洞，且具有左右或上下镜像。', group: 'combo', points: 6, highlight: 'holes', matches: m => m.components.length === 1 && m.holes.length === 1 && (m.mirrorX || m.mirrorY) },
-  { id: 'symmetric-islands', name: '对称群岛', description: '至少两个连通块，且具有左右或上下镜像。', group: 'combo', points: 6, highlight: 'components', matches: m => m.components.length >= 2 && (m.mirrorX || m.mirrorY) },
-  { id: 'hidden-heart', name: '藏心遗迹', description: '化石不触及棋盘边缘，且重心恰好位于中心。', group: 'combo', points: 6, highlight: 'none', matches: m => m.interior && m.centered },
-  { id: 'maze', name: '空腔迷宫', description: '一体相连的化石，封存了至少两个空洞。', group: 'combo', points: 6, highlight: 'holes', matches: m => m.components.length === 1 && m.holes.length >= 2 },
+  { id: 'connected', name: '一体遗存', description: '所有化石像素通过上下左右连接，恰好形成一个连通块。', group: 'connection', points: structurePoints('connected'), highlight: 'components', matches: m => m.components.length === 1 },
+  { id: 'islands', name: '三座遗迹', description: '化石恰好由三个互不相连的连通块组成。', group: 'connection', points: structurePoints('islands'), highlight: 'components', matches: m => m.components.length === 3 },
+  { id: 'cavities', name: '重重空腔', description: '化石中封存了至少两个彼此独立的空白区域。', group: 'cavity', points: structurePoints('cavities'), highlight: 'holes', matches: m => m.holes.length >= 2 },
+  { id: 'mirror-x', name: '左右镜像', description: '关于整个棋盘的垂直中线，左右像素完全重合。', group: 'symmetry', points: structurePoints('mirror-x'), highlight: 'symmetry', matches: m => m.mirrorX },
+  { id: 'mirror-y', name: '上下镜像', description: '关于整个棋盘的水平中线，上下像素完全重合。', group: 'symmetry', points: structurePoints('mirror-y'), highlight: 'symmetry', matches: m => m.mirrorY },
+  { id: 'double-mirror', name: '双轴对称', description: '同时关于整个棋盘的水平中线与垂直中线对称。', group: 'symmetry', points: structurePoints('double-mirror'), highlight: 'symmetry', matches: m => m.mirrorX && m.mirrorY },
+  { id: 'rotation', name: '四向回转', description: '围绕棋盘中心旋转 90° 后，图案保持不变。', group: 'symmetry', points: structurePoints('rotation'), highlight: 'symmetry', matches: m => m.quarterTurn },
+  { id: 'span', name: '贯穿地层', description: '至少一整行或一整列都被化石像素填满。', group: 'span', points: structurePoints('span'), highlight: 'none', matches: m => m.fullRow || m.fullColumn },
+  { id: 'cross', name: '十字贯穿', description: '同时存在至少一整行和一整列被填满。', group: 'span', points: structurePoints('cross'), highlight: 'none', matches: m => m.fullRow && m.fullColumn },
+  { id: 'interior', name: '深藏其中', description: '所有化石像素都不接触棋盘的四条边缘。', group: 'layout', points: structurePoints('interior'), highlight: 'none', matches: m => m.interior },
+  { id: 'centered', name: '重心居中', description: '所有化石像素的平均坐标恰好位于棋盘中心。', group: 'layout', points: structurePoints('centered'), highlight: 'none', matches: m => m.centered },
+  { id: 'ring', name: '独眼之环', description: '一个连通块、一个空洞，且具有左右或上下镜像。', group: 'combo', points: structurePoints('ring'), highlight: 'holes', matches: m => m.components.length === 1 && m.holes.length === 1 && (m.mirrorX || m.mirrorY) },
+  { id: 'symmetric-islands', name: '对称群岛', description: '至少两个连通块，且具有左右或上下镜像。', group: 'combo', points: structurePoints('symmetric-islands'), highlight: 'components', matches: m => m.components.length >= 2 && (m.mirrorX || m.mirrorY) },
+  { id: 'hidden-heart', name: '藏心遗迹', description: '化石不触及棋盘边缘，且重心恰好位于中心。', group: 'combo', points: structurePoints('hidden-heart'), highlight: 'none', matches: m => m.interior && m.centered },
+  { id: 'maze', name: '空腔迷宫', description: '一体相连的化石，封存了至少两个空洞。', group: 'combo', points: structurePoints('maze'), highlight: 'holes', matches: m => m.components.length === 1 && m.holes.length >= 2 },
+  ...CATALOGUE_TRAITS,
 ]
+
+for (const trait of TRAITS) {
+  if (!Number.isSafeInteger(trait.points) || trait.points <= 0) throw new Error(`结构「${trait.id}」必须配置正整数分值。`)
+}
+export const SCORING_RULES = TRAITS.map(({ id, group, points }) => ({ id, group, points }))
 
 export function hashSeed(value: string): number {
   let hash = 2166136261
@@ -186,10 +203,14 @@ export function analyzeFossil(board: Board): Metrics {
   if (board.length !== 64 || board.some(cell => typeof cell !== 'boolean')) throw new Error('化石必须是 8×8 二值网格。')
   const pixels = board.flatMap((filled, i) => filled ? [i] : [])
   const count = pixels.length
+  const components = findRegions(board, true, false)
+  const holes = findRegions(board, false, true).filter(region => !region.some(isEdge))
+  let catalogue: CatalogueMatches | undefined
   return {
     count,
-    components: findRegions(board, true, false),
-    holes: findRegions(board, false, true).filter(region => !region.some(isEdge)),
+    components,
+    holes,
+    get catalogue() { return catalogue ??= detectCatalogue(board, components, holes) },
     mirrorX: count > 0 && board.every((filled, i) => filled === board[Math.floor(i / 8) * 8 + 7 - i % 8]),
     mirrorY: count > 0 && board.every((filled, i) => filled === board[(7 - Math.floor(i / 8)) * 8 + i % 8]),
     quarterTurn: count > 0 && board.every((filled, i) => filled === board[(i % 8) * 8 + 7 - Math.floor(i / 8)]),
@@ -204,38 +225,60 @@ export function evaluateTraits(metrics: Metrics): Trait[] {
   return TRAITS.filter(trait => trait.matches(metrics))
 }
 
-export function calculateScore(traits: Trait[]): number {
-  const best = new Map<TraitGroup, number>()
-  let combo = 0
-  traits.forEach(trait => {
-    if (trait.group === 'combo') combo += trait.points
-    else best.set(trait.group, Math.max(best.get(trait.group) ?? 0, trait.points))
-  })
-  return [...best.values()].reduce((a, b) => a + b, 0) + Math.min(12, combo)
+// 计分：组合奇遇是独立加成层；其余结构按「上下位」压制——被某个命中的上位结构严格蕴含时不计分。
+// 返回压制链最顶端的那一项，保证下位结构总是挂到真正的根条目上。
+function coveringTrait(trait: Trait, matched: ReadonlySet<string>): string | null {
+  if (trait.group === 'combo') return null
+  let current = COVERED_BY.get(trait.id)?.find(upper => matched.has(upper)) ?? null
+  while (current) {
+    const next = COVERED_BY.get(current)?.find(upper => matched.has(upper))
+    if (!next) break
+    current = next
+  }
+  return current
 }
 
-export function scoreBreakdown(traits: Trait[]) {
-  const best = new Map<TraitGroup, Trait>()
-  traits.filter(trait => trait.group !== 'combo').forEach(trait => {
-    if ((best.get(trait.group)?.points ?? -1) < trait.points) best.set(trait.group, trait)
-  })
+export function calculateScore(traits: Trait[]): number {
+  const matched = new Set(traits.map(trait => trait.id))
+  let combo = 0
+  let total = 0
+  for (const trait of traits) {
+    if (trait.group === 'combo') { combo += trait.points; continue }
+    if (!coveringTrait(trait, matched)) total += trait.points
+  }
+  return total + Math.min(12, combo)
+}
+
+export interface ScoreEntry {
+  trait: Trait
+  awarded: number
+  reason: string
+  // 被上位结构覆盖时记录上位 id，用于在观察手记中收纳到父项分支里；组合上限等其它未计分情形为 null。
+  supersededBy: string | null
+}
+
+export function scoreBreakdown(traits: Trait[]): ScoreEntry[] {
+  const matched = new Set(traits.map(trait => trait.id))
   let comboBudget = 12
   return traits.map(trait => {
-    const winner = best.get(trait.group)
-    const awarded = trait.group === 'combo' ? Math.min(comboBudget, trait.points) : winner?.id === trait.id ? trait.points : 0
-    if (trait.group === 'combo') comboBudget -= awarded
-    const reason = awarded === trait.points ? (trait.group === 'combo' ? '组合加分' : '计入总分')
-      : trait.group === 'combo' ? '组合加分上限 12 分' : `同组由「${winner?.name}」计分`
-    return { trait, awarded, reason }
+    if (trait.group === 'combo') {
+      const awarded = Math.min(comboBudget, trait.points)
+      comboBudget -= awarded
+      return { trait, awarded, reason: awarded === trait.points ? '组合加分' : '组合加分上限 12 分', supersededBy: null }
+    }
+    const covering = coveringTrait(trait, matched)
+    const reason = covering ? `由上位结构「${TRAITS.find(item => item.id === covering)?.name}」覆盖` : '计入总分'
+    return { trait, awarded: covering ? 0 : trait.points, reason, supersededBy: covering }
   })
+}
+
+// 观察手记中逐项揭示的单位数量：被同组更高分覆盖的条目收进父项分支，不单独计入揭示序列。
+export function revealEntryCount(traits: Trait[]): number {
+  return scoreBreakdown(traits).filter(entry => !entry.supersededBy).length
 }
 
 export function featuredTraits(traits: Trait[]): Trait[] {
-  const best = new Map<TraitGroup, Trait>()
-  traits.forEach(trait => {
-    if ((best.get(trait.group)?.points ?? -1) < trait.points) best.set(trait.group, trait)
-  })
-  return [...best.values()].sort((a, b) => b.points - a.points).slice(0, 3)
+  return scoreBreakdown(traits).filter(entry => entry.awarded > 0).sort((a, b) => b.awarded - a.awarded || b.trait.points - a.trait.points).slice(0, 3).map(entry => entry.trait)
 }
 
 export function toHex(board: Board): string {

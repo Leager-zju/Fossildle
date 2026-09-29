@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { discover, saveCollection, STORAGE_KEY, type Collection } from './collection'
-import { assertCurrentLocalBuild, initializeCollection, LOCAL_BUILD_KEY, localBuildForHost } from './localMode'
+import { assertCurrentLocalBuild, initializeCollection, LOCAL_BUILD_KEY, localBuildForHost, unlockAllForHost } from './localMode'
 
 const a = '01759100000000000000-' + 'a'.repeat(32)
 const b = '01759100000000000001-' + 'b'.repeat(32)
@@ -22,6 +22,11 @@ describe('本地构建隔离', () => {
     for (const host of ['leager-zju.github.io', 'example.com', '172.32.0.1', '192.168.999.1', 'localhost.evil.test']) expect(localBuildForHost(a, host)).toBe('')
     expect(localBuildForHost(undefined, 'localhost')).toBe('')
     expect(localBuildForHost('wrong', 'localhost')).toBe('')
+  })
+  it('解锁全部结构只接受开启标记与本机或私网地址', () => {
+    for (const flag of ['1', 'true']) for (const host of ['localhost', '127.0.0.1', '192.168.1.3']) expect(unlockAllForHost(flag, host)).toBe(true)
+    for (const host of ['leager-zju.github.io', 'example.com', 'localhost.evil.test']) expect(unlockAllForHost('1', host)).toBe(false)
+    for (const flag of [undefined, '', '0', 'false', 'yes']) expect(unlockAllForHost(flag, 'localhost')).toBe(false)
   })
   it('新本地版本重置化石和身份，只操作本应用数据', () => {
     const old = discover(empty, '2026-09-28').collection

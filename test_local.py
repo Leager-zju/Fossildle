@@ -34,15 +34,38 @@ class ArgumentsTest(unittest.TestCase):
         self.assertEqual((args.base_path, args.port), ("/example/site/", 8090))
 
     def test_invalid_combinations(self):
-        for args in (["--port", "0"], ["--port", "65536"], ["--port", "abc"], ["build", "--skip-build"], ["build", "--open"], ["preview", "--skip-build", "--debug"], ["preview", "--skip-build", "--install"], ["--base-path", "../secret"], ["--base-path", "https://example.com"]):
+        for args in (["--port", "0"], ["--port", "65536"], ["--port", "abc"], ["build", "--skip-build"], ["build", "--open"], ["build", "--unlock-all"], ["preview", "--skip-build", "--debug"], ["preview", "--skip-build", "--install"], ["preview", "--skip-build", "--unlock-all"], ["--base-path", "../secret"], ["--base-path", "https://example.com"]):
             with self.subTest(args=args), contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
                 local.parse_args(args)
+
+    def test_unlock_all_defaults_off_and_is_opt_in(self):
+        self.assertFalse(local.parse_args([]).unlock_all)
+        self.assertFalse(local.parse_args(["preview"]).unlock_all)
+        self.assertTrue(local.parse_args(["dev", "--unlock-all"]).unlock_all)
+        self.assertTrue(local.parse_args(["preview", "--unlock-all"]).unlock_all)
+
+    def test_unlock_all_sets_environment_flag(self):
+        with mock.patch.dict(os.environ, {}, clear=True):
+            self.assertNotIn("VITE_FOSSILDLE_UNLOCK_ALL", local.local_environment())
+            self.assertEqual(local.local_environment(unlock_all=True)["VITE_FOSSILDLE_UNLOCK_ALL"], "1")
 
     def test_debug_build_adds_sourcemap(self):
         with mock.patch.object(local, "run") as run:
             with mock.patch.object(Path, "is_file", return_value=True):
                 local.build("npm", True)
-            run.assert_called_once_with(["npm", "run", "build", "--", "--sourcemap"], reset_local=True)
+            run.assert_called_once_with(["npm", "run", "build", "--", "--sourcemap"], reset_local=True, unlock_all=False)
+
+    def test_unlock_all_reaches_build_and_dev(self):
+        with mock.patch.object(local, "run") as run:
+            with mock.patch.object(Path, "is_file", return_value=True):
+                local.build("npm", False, True)
+            run.assert_called_once_with(["npm", "run", "build"], reset_local=True, unlock_all=True)
+        with mock.patch.object(local, "prepare_dependencies", return_value="npm"), mock.patch.object(local, "release_port"), mock.patch.object(local, "run") as run:
+            self.assertEqual(local.main(["dev", "--unlock-all"]), 0)
+            self.assertTrue(run.call_args.kwargs["unlock_all"])
+        with mock.patch.object(local, "prepare_dependencies", return_value="npm"), mock.patch.object(local, "release_port"), mock.patch.object(local, "run") as run:
+            self.assertEqual(local.main(["dev"]), 0)
+            self.assertFalse(run.call_args.kwargs["unlock_all"])
 
     def test_local_environment_changes_without_mutating_parent(self):
         before = os.environ.get("VITE_FOSSILDLE_LOCAL_BUILD")

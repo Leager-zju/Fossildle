@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { TRAITS } from '../src/lib/engine'
 
 const key = 'fossildle.collection.v1'
 
@@ -43,10 +44,10 @@ test('每日发现、珍藏、刷新、图鉴和图片分享', async ({ page }, 
   await page.getByRole('button', { name: '清除筛选' }).click()
   await expect(page.locator('.specimen-tile')).toHaveCount(1)
   await page.getByRole('link', { name: '结构图鉴', exact: true }).click()
-  await expect(page.locator('.guide-card')).toHaveCount(16)
+  await expect(page.locator('.guide-card')).toHaveCount(TRAITS.length)
   await expect(page.locator('.milestone')).toHaveCount(0)
   await expect(page.locator('.guide-grid')).toHaveCount(1)
-  await expect(page.getByRole('progressbar', { name: '图鉴解锁进度' })).toHaveAttribute('aria-valuemax', '16')
+  await expect(page.getByRole('progressbar', { name: '图鉴解锁进度' })).toHaveAttribute('aria-valuemax', String(TRAITS.length))
   await page.screenshot({ path: testInfo.outputPath('fieldguide.png'), fullPage: true })
   expect(errors).toEqual([])
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)

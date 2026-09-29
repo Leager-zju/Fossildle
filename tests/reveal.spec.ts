@@ -1,7 +1,22 @@
 import { test, expect } from '@playwright/test'
-import { ROW_STEP_MS, SCORE_STEP_MS, SCORE_SETTLE_MS } from '../src/lib/useRevealSequence'
+import { ROW_STEP_MS, SCORE_REVEAL_BUDGET_MS, scoreStepMs, SCORE_SETTLE_MS } from '../src/lib/useRevealSequence'
+import { analyzeFossil, evaluateTraits, fromHex, scoreBreakdown } from '../src/lib/engine'
 
+const ringEntries = scoreBreakdown(evaluateTraits(analyzeFossil(fromHex('00003c24243c0000')))).sort((a, b) => a.awarded - b.awarded || a.trait.points - b.trait.points)
+const ringRoots = ringEntries.filter(entry => !entry.supersededBy)
+const step = scoreStepMs(ringRoots.length)
 const ringUrl = '/#specimen/v1/2026-09-28/00003c24243c0000'
+const revealDuration = ROW_STEP_MS * 8 + step * ringRoots.length + SCORE_SETTLE_MS
+
+async function openToday(page: import('@playwright/test').Page) {
+  await page.clock.install({ time: new Date('2026-09-28T12:00:00Z') })
+  await page.clock.pauseAt(new Date('2026-09-28T12:00:01Z'))
+  await page.addInitScript(() => {
+    localStorage.setItem('fossildle.collection.v1', JSON.stringify({ schemaVersion: 1, visitorId: 'reveal-navigation-player', specimens: [{ date: '2026-09-28', hex: '00003c24243c0000', version: 1, favorite: false }] }))
+  })
+  await page.goto('/#today')
+  await expect(page.locator('.main-fossil .fossil-art')).toHaveAttribute('data-revealed-rows', '0')
+}
 
 test.describe('逐行显形与顺序计分', () => {
   test.use({ reducedMotion: 'no-preference' })
@@ -30,30 +45,34 @@ test.describe('逐行显形与顺序计分', () => {
     }
     await expect(page.locator('.field-notes')).toHaveAttribute('data-phase', 'scores')
     await expect(page.getByTestId('structure-score')).toHaveCount(0)
-    const ascendingIds = ['interior', 'mirror-x', 'mirror-y', 'double-mirror', 'ring', 'hidden-heart', 'connected', 'eye', 'centered', 'rotation']
+    const ascendingIds = ringRoots.map(entry => entry.trait.id)
+    expect(ascendingIds.length).toBeGreaterThan(5)
+    expect(step * ascendingIds.length).toBeLessThanOrEqual(SCORE_REVEAL_BUDGET_MS)
     for (let index = 0; index < ascendingIds.length; index++) {
-      await page.clock.runFor(SCORE_STEP_MS - 1)
-      await expect(page.locator('.score-entry')).toHaveCount(index)
+      await page.clock.runFor(step - 1)
+      await expect(page.locator('.field-notes > .score-entry')).toHaveCount(index)
       await page.clock.runFor(1)
-      await expect(page.locator('.score-entry')).toHaveCount(index + 1)
+      await expect(page.locator('.field-notes > .score-entry')).toHaveCount(index + 1)
       await expect(page.locator('.score-total, .overall-rarity')).toHaveCount(0)
-      await expect(page.locator('.score-entry .trait-rarity')).toHaveCount(index + 1)
+      await expect(page.locator('.field-notes > .score-entry > .score-entry-head .trait-rarity')).toHaveCount(index + 1)
       await expect(page.getByRole('button', { name: '分享发现', exact: true })).toBeDisabled()
-      expect(await page.locator('.score-entry').evaluateAll(entries => entries.map(entry => entry.getAttribute('data-trait')))).toEqual(ascendingIds.slice(0, index + 1).reverse())
+      expect(await page.locator('.field-notes > .score-entry').evaluateAll(entries => entries.map(entry => entry.getAttribute('data-trait')))).toEqual(ascendingIds.slice(0, index + 1).reverse())
       await expect(page.locator('.field-notes > .section-label + .score-entry')).toHaveAttribute('data-trait', ascendingIds[index])
-      if (index === 0) await page.locator('.score-entry').first().click()
-      await expect(page.locator('[data-trait="interior"]')).toHaveAttribute('aria-pressed', 'true')
+      if (index === 0) await page.locator('.field-notes > .score-entry').first().locator('.score-entry-head').click()
+      await expect(page.locator(`.field-notes > .score-entry[data-trait="${ascendingIds[0]}"] .score-entry-head`)).toHaveAttribute('aria-pressed', 'true')
     }
     await page.clock.runFor(SCORE_SETTLE_MS - 1)
     await expect(page.locator('.score-total, .overall-rarity')).toHaveCount(0)
+    await expect(page.locator('.observation-entry')).toHaveCount(0)
     await page.clock.runFor(1)
-    await expect(page.getByTestId('structure-score')).toHaveText('72分')
+    await expect(page.getByTestId('structure-score')).toHaveText('140分')
+    await expect(page.locator('.score-entry[data-trait="eightfold"]')).toHaveAttribute('data-awarded', '38')
     await expect(page.locator('.score-total .overall-rarity')).toBeVisible()
-    const values = await page.locator('.score-entry').evaluateAll(entries => entries.map(entry => Number(entry.getAttribute('data-awarded'))))
+    const values = await page.locator('.field-notes > .score-entry').evaluateAll(entries => entries.map(entry => Number(entry.getAttribute('data-awarded'))))
     expect(values).toEqual([...values].sort((a, b) => b - a))
     await expect(page.locator('.score-reason')).toHaveCount(0)
     const totalBox = await page.locator('.score-total').boundingBox()
-    const firstBox = await page.locator('.score-entry').first().boundingBox()
+    const firstBox = await page.locator('.field-notes > .score-entry').first().boundingBox()
     expect(totalBox!.y + totalBox!.height).toBeLessThanOrEqual(firstBox!.y)
     await expect(page.locator('.field-notes')).toHaveAttribute('data-phase', 'complete')
     await expect(page.getByRole('button', { name: '分享发现', exact: true })).toBeEnabled()
@@ -89,8 +108,124 @@ test.describe('逐行显形与顺序计分', () => {
     await page.clock.runFor(ROW_STEP_MS)
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await expect(page.locator('.field-notes')).toHaveAttribute('data-phase', 'complete')
-    await expect(page.locator('.trait-row')).toHaveCount(10)
+    await expect(page.locator('.score-entry')).toHaveCount(ringEntries.length)
+    await expect(page.locator('.observation-notes')).toHaveCount(0)
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await expect(page.locator('.field-notes')).toHaveAttribute('data-phase', 'complete')
+    await expect(page.getByRole('button', { name: '分享发现', exact: true })).toBeEnabled()
     await page.clock.runFor(20000)
-    await expect(page.getByTestId('structure-score')).toHaveText('72分')
+    await expect(page.getByTestId('structure-score')).toHaveText('140分')
+  })
+
+  test('完整揭示后切换图鉴、藏馆与关于再返回不会重播', async ({ page }) => {
+    await openToday(page)
+    await page.clock.runFor(revealDuration)
+    await expect(page.locator('.field-notes')).toHaveAttribute('data-phase', 'complete')
+    for (const name of ['结构图鉴', '我的藏馆', '关于与游戏规则']) {
+      await page.getByRole('link', { name: new RegExp(name) }).click()
+      await expect(page.locator('.field-notes')).toHaveCount(0)
+      await page.getByRole('link', { name: '今日发现', exact: true }).click()
+      await expect(page.locator('.field-notes')).toHaveAttribute('data-phase', 'complete')
+      await expect(page.locator('.main-fossil .fossil-art')).toHaveAttribute('data-revealed-rows', '8')
+      await expect(page.locator('.row-flipping')).toHaveCount(0)
+      await expect(page.getByTestId('structure-score')).toHaveText('140分')
+      await expect(page.getByRole('button', { name: '分享发现', exact: true })).toBeEnabled()
+    }
+  })
+
+  test('离开今日发现期间翻行和逐项计分仍继续，返回显示实际进度', async ({ page }) => {
+    await openToday(page)
+    await page.clock.runFor(ROW_STEP_MS * 2)
+    await page.getByRole('link', { name: /我的藏馆/ }).click()
+    await expect(page.locator('.field-notes')).toHaveCount(0)
+    await page.clock.runFor(ROW_STEP_MS * 3)
+    await page.getByRole('link', { name: '今日发现', exact: true }).click()
+    await expect(page.locator('.main-fossil .fossil-art')).toHaveAttribute('data-revealed-rows', '5')
+    await expect(page.getByTestId('structure-score')).toHaveCount(0)
+    await page.getByRole('link', { name: '结构图鉴', exact: true }).click()
+    await page.clock.runFor(ROW_STEP_MS * 3 + step * 2)
+    await page.getByRole('link', { name: '今日发现', exact: true }).click()
+    await expect(page.locator('.field-notes')).toHaveAttribute('data-phase', 'scores')
+    await expect(page.locator('.field-notes > .score-entry')).toHaveCount(2)
+    await expect(page.getByRole('button', { name: '分享发现', exact: true })).toBeDisabled()
+    await page.getByRole('link', { name: '结构图鉴', exact: true }).click()
+    await page.clock.runFor((ringRoots.length - 2) * step + SCORE_SETTLE_MS)
+    await page.getByRole('link', { name: '今日发现', exact: true }).click()
+    await expect(page.locator('.field-notes')).toHaveAttribute('data-phase', 'complete')
+    await expect(page.getByTestId('structure-score')).toHaveText('140分')
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('fossildle.collection.v1')!).specimens)).toEqual([{ date: '2026-09-28', hex: '00003c24243c0000', version: 1, favorite: false }])
+  })
+
+  test('手动重播跨页保留当前轮次，多次重播都从零开始', async ({ page }) => {
+    await openToday(page)
+    await page.clock.runFor(revealDuration)
+    const replay = page.getByRole('button', { name: '重播显形与计分，不重新生成' })
+    for (let round = 0; round < 2; round++) {
+      await replay.click()
+      await expect(page.locator('.main-fossil .fossil-art')).toHaveAttribute('data-revealed-rows', '0')
+      await expect(page.getByTestId('structure-score')).toHaveCount(0)
+      await page.clock.runFor(ROW_STEP_MS)
+      await page.getByRole('link', { name: '结构图鉴', exact: true }).click()
+      await page.clock.runFor(ROW_STEP_MS * 2)
+      await page.getByRole('link', { name: '今日发现', exact: true }).click()
+      await expect(page.locator('.main-fossil .fossil-art')).toHaveAttribute('data-revealed-rows', '3')
+      await expect(page.getByRole('button', { name: '分享发现', exact: true })).toBeDisabled()
+      await page.clock.runFor(revealDuration - ROW_STEP_MS * 3)
+      await expect(page.getByTestId('structure-score')).toHaveText('140分')
+    }
+  })
+
+  test('不同标本的揭示进度隔离，今日与同一标本详情共用进度', async ({ page }) => {
+    await openToday(page)
+    await page.clock.runFor(ROW_STEP_MS * 2)
+    await page.evaluate(() => { location.hash = '#specimen/v2/2026-09-28/ffffffffffffffff' })
+    await expect(page.locator('.main-fossil .fossil-art')).toHaveAttribute('data-revealed-rows', '0')
+    await page.clock.runFor(ROW_STEP_MS * 2)
+    await page.getByRole('link', { name: '今日发现', exact: true }).click()
+    await expect(page.locator('.main-fossil .fossil-art')).toHaveAttribute('data-revealed-rows', '4')
+    await page.evaluate(hash => { location.hash = hash }, ringUrl.slice(1))
+    await expect(page.getByText('来自你的藏馆')).toBeVisible()
+    await expect(page.locator('.main-fossil .fossil-art')).toHaveAttribute('data-revealed-rows', '4')
+    await page.clock.runFor(ROW_STEP_MS)
+    await page.getByRole('link', { name: '今日发现', exact: true }).click()
+    await expect(page.locator('.main-fossil .fossil-art')).toHaveAttribute('data-revealed-rows', '5')
+  })
+
+  test('清理岩层时离开，后台启动揭示；返场完成提示只出现一次', async ({ page }) => {
+    await page.clock.install({ time: new Date('2026-09-28T12:00:00Z') })
+    await page.clock.pauseAt(new Date('2026-09-28T12:00:01Z'))
+    await page.addInitScript(() => {
+      const original = crypto.getRandomValues.bind(crypto)
+      crypto.getRandomValues = function <T extends ArrayBufferView>(array: T): T {
+        if (array instanceof Uint8Array && array.length === 8) {
+          array.set([0, 0, 60, 36, 36, 60, 0, 0])
+          return array
+        }
+        return original(array) as T
+      }
+    })
+    await page.goto('/#today')
+    await page.getByRole('button', { name: '发现今日化石', exact: true }).click()
+    await expect(page.getByText('正在清理岩层', { exact: true })).toBeVisible()
+    await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('fossildle.collection.v1')!).specimens.length)).toBe(1)
+    await page.getByRole('link', { name: '结构图鉴', exact: true }).click()
+    await page.clock.runFor(1500 + ROW_STEP_MS * 2)
+    await expect(page.locator('.toast')).toHaveCount(0)
+    await page.getByRole('link', { name: '今日发现', exact: true }).click()
+    await expect(page.locator('.main-fossil .fossil-art')).toHaveAttribute('data-revealed-rows', '2')
+    await expect(page.locator('.toast')).toHaveCount(0)
+    await page.getByRole('link', { name: '结构图鉴', exact: true }).click()
+    await page.clock.runFor(revealDuration)
+    await page.getByRole('link', { name: '今日发现', exact: true }).click()
+    await expect(page.getByTestId('structure-score')).toHaveText('140分')
+    await expect(page.locator('.toast')).toContainText('今日发现已收入藏馆')
+    await page.getByRole('button', { name: '关闭提示' }).click()
+    await page.getByRole('link', { name: '结构图鉴', exact: true }).click()
+    await page.getByRole('link', { name: '今日发现', exact: true }).click()
+    await expect(page.locator('.toast')).toHaveCount(0)
+    await page.getByRole('button', { name: '重播显形与计分，不重新生成' }).click()
+    await page.clock.runFor(revealDuration)
+    await expect(page.locator('.toast')).toHaveCount(0)
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('fossildle.collection.v1')!).specimens)).toEqual([{ date: '2026-09-28', hex: '00003c24243c0000', version: 2, favorite: false }])
   })
 })

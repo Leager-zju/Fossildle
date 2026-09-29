@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { resolve, extname, sep } from 'node:path'
 
+const port = Number(process.env.FOSSILDLE_TEST_PORT ?? 4173)
 const root = fileURLToPath(new URL('../dist/', import.meta.url))
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png' }
 createServer(async (request, response) => {
@@ -17,4 +18,4 @@ createServer(async (request, response) => {
     response.writeHead(200, { 'Content-Type': types[extname(filename)] || 'application/octet-stream', 'Cache-Control': 'no-store' })
     response.end(body)
   } catch { response.writeHead(404); response.end('Not Found') }
-}).listen(4173, '127.0.0.1', () => console.log('Static production test server: http://127.0.0.1:4173/Fossildle/'))
+}).listen(port, '127.0.0.1', () => console.log(`Static production test server: http://127.0.0.1:${port}/Fossildle/`))

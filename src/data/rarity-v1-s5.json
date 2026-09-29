@@ -1,0 +1,1258 @@
+{
+  "generatorVersion": 1,
+  "scoringVersion": 5,
+  "scoringRules": [
+    {
+      "id": "connected",
+      "group": "connection",
+      "points": 7
+    },
+    {
+      "id": "islands",
+      "group": "connection",
+      "points": 4
+    },
+    {
+      "id": "cavities",
+      "group": "cavity",
+      "points": 6
+    },
+    {
+      "id": "mirror-x",
+      "group": "symmetry",
+      "points": 23
+    },
+    {
+      "id": "mirror-y",
+      "group": "symmetry",
+      "points": 23
+    },
+    {
+      "id": "double-mirror",
+      "group": "symmetry",
+      "points": 34
+    },
+    {
+      "id": "rotation",
+      "group": "symmetry",
+      "points": 34
+    },
+    {
+      "id": "span",
+      "group": "span",
+      "points": 4
+    },
+    {
+      "id": "cross",
+      "group": "span",
+      "points": 7
+    },
+    {
+      "id": "interior",
+      "group": "layout",
+      "points": 20
+    },
+    {
+      "id": "centered",
+      "group": "layout",
+      "points": 8
+    },
+    {
+      "id": "ring",
+      "group": "combo",
+      "points": 13
+    },
+    {
+      "id": "symmetric-islands",
+      "group": "combo",
+      "points": 13
+    },
+    {
+      "id": "hidden-heart",
+      "group": "combo",
+      "points": 13
+    },
+    {
+      "id": "maze",
+      "group": "combo",
+      "points": 9
+    },
+    {
+      "id": "twin-isles",
+      "group": "connection",
+      "points": 11
+    },
+    {
+      "id": "archipelago",
+      "group": "connection",
+      "points": 2
+    },
+    {
+      "id": "stardust",
+      "group": "connection",
+      "points": 2
+    },
+    {
+      "id": "domino",
+      "group": "connection",
+      "points": 2
+    },
+    {
+      "id": "triplets",
+      "group": "connection",
+      "points": 14
+    },
+    {
+      "id": "mainland",
+      "group": "connection",
+      "points": 3
+    },
+    {
+      "id": "string-of-pearls",
+      "group": "connection",
+      "points": 13
+    },
+    {
+      "id": "living-thread",
+      "group": "connection",
+      "points": 13
+    },
+    {
+      "id": "diagonal-main",
+      "group": "symmetry",
+      "points": 20
+    },
+    {
+      "id": "diagonal-anti",
+      "group": "symmetry",
+      "points": 20
+    },
+    {
+      "id": "half-turn",
+      "group": "symmetry",
+      "points": 23
+    },
+    {
+      "id": "eightfold",
+      "group": "symmetry",
+      "points": 38
+    },
+    {
+      "id": "counterpoint",
+      "group": "symmetry",
+      "points": 23
+    },
+    {
+      "id": "tiled-quarters",
+      "group": "symmetry",
+      "points": 34
+    },
+    {
+      "id": "crystal-square",
+      "group": "geometry",
+      "points": 4
+    },
+    {
+      "id": "amber-window",
+      "group": "geometry",
+      "points": 4
+    },
+    {
+      "id": "little-cross",
+      "group": "geometry",
+      "points": 4
+    },
+    {
+      "id": "saltire",
+      "group": "geometry",
+      "points": 4
+    },
+    {
+      "id": "staircase",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "hammerhead",
+      "group": "geometry",
+      "points": 3
+    },
+    {
+      "id": "elbow",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "zigzag",
+      "group": "geometry",
+      "points": 3
+    },
+    {
+      "id": "stone-arch",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "hourglass",
+      "group": "geometry",
+      "points": 3
+    },
+    {
+      "id": "checkerboard",
+      "group": "texture",
+      "points": 8
+    },
+    {
+      "id": "ladder",
+      "group": "texture",
+      "points": 5
+    },
+    {
+      "id": "ribbed",
+      "group": "texture",
+      "points": 7
+    },
+    {
+      "id": "parallel-veins",
+      "group": "span",
+      "points": 8
+    },
+    {
+      "id": "cross-current",
+      "group": "span",
+      "points": 12
+    },
+    {
+      "id": "herringbone",
+      "group": "texture",
+      "points": 7
+    },
+    {
+      "id": "woven-mat",
+      "group": "texture",
+      "points": 8
+    },
+    {
+      "id": "four-corners",
+      "group": "boundary",
+      "points": 4
+    },
+    {
+      "id": "frame",
+      "group": "boundary",
+      "points": 20
+    },
+    {
+      "id": "one-shore",
+      "group": "boundary",
+      "points": 13
+    },
+    {
+      "id": "coast-to-coast",
+      "group": "boundary",
+      "points": 2
+    },
+    {
+      "id": "four-ports",
+      "group": "boundary",
+      "points": 13
+    },
+    {
+      "id": "cornerless",
+      "group": "boundary",
+      "points": 4
+    },
+    {
+      "id": "half-filled",
+      "group": "population",
+      "points": 3
+    },
+    {
+      "id": "sparse-sky",
+      "group": "population",
+      "points": 13
+    },
+    {
+      "id": "dense-stratum",
+      "group": "population",
+      "points": 13
+    },
+    {
+      "id": "even-quadrants",
+      "group": "layout",
+      "points": 6
+    },
+    {
+      "id": "pinhole",
+      "group": "cavity",
+      "points": 9
+    },
+    {
+      "id": "rising-tide",
+      "group": "population",
+      "points": 8
+    },
+    {
+      "id": "quiet-channel",
+      "group": "layout",
+      "points": 4
+    },
+    {
+      "id": "central-gem",
+      "group": "geometry",
+      "points": 4
+    },
+    {
+      "id": "lake",
+      "group": "cavity",
+      "points": 7
+    },
+    {
+      "id": "cross-forward-5",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "cross-forward-9",
+      "group": "geometry",
+      "points": 4
+    },
+    {
+      "id": "cross-forward-13",
+      "group": "geometry",
+      "points": 8
+    },
+    {
+      "id": "cross-x-5",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "cross-x-9",
+      "group": "geometry",
+      "points": 4
+    },
+    {
+      "id": "cross-x-13",
+      "group": "geometry",
+      "points": 8
+    },
+    {
+      "id": "solid-2",
+      "group": "geometry",
+      "points": 1
+    },
+    {
+      "id": "solid-4",
+      "group": "geometry",
+      "points": 9
+    },
+    {
+      "id": "solid-5",
+      "group": "geometry",
+      "points": 15
+    },
+    {
+      "id": "solid-6",
+      "group": "geometry",
+      "points": 23
+    },
+    {
+      "id": "solid-7",
+      "group": "geometry",
+      "points": 33
+    },
+    {
+      "id": "solid-8",
+      "group": "geometry",
+      "points": 40
+    },
+    {
+      "id": "frame-4",
+      "group": "geometry",
+      "points": 9
+    },
+    {
+      "id": "frame-5",
+      "group": "geometry",
+      "points": 15
+    },
+    {
+      "id": "frame-6",
+      "group": "geometry",
+      "points": 23
+    },
+    {
+      "id": "frame-7",
+      "group": "geometry",
+      "points": 33
+    },
+    {
+      "id": "frame-8",
+      "group": "geometry",
+      "points": 40
+    },
+    {
+      "id": "lines-3",
+      "group": "span",
+      "points": 13
+    },
+    {
+      "id": "lines-4",
+      "group": "span",
+      "points": 18
+    },
+    {
+      "id": "grid-2",
+      "group": "span",
+      "points": 13
+    },
+    {
+      "id": "grid-3",
+      "group": "span",
+      "points": 20
+    },
+    {
+      "id": "holes-3",
+      "group": "cavity",
+      "points": 8
+    },
+    {
+      "id": "stone-hook",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "ship-bow",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "budding-branch",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "twin-crystal",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "stone-moth",
+      "group": "texture",
+      "points": 2
+    },
+    {
+      "id": "saddle",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "single-pebble",
+      "group": "connection",
+      "points": 1
+    },
+    {
+      "id": "paired-pebble",
+      "group": "connection",
+      "points": 1
+    },
+    {
+      "id": "equal-fragments",
+      "group": "connection",
+      "points": 2
+    },
+    {
+      "id": "two-corners",
+      "group": "boundary",
+      "points": 2
+    },
+    {
+      "id": "narrow-gate",
+      "group": "boundary",
+      "points": 2
+    },
+    {
+      "id": "gentle-balance",
+      "group": "layout",
+      "points": 2
+    },
+    {
+      "id": "central-ember",
+      "group": "layout",
+      "points": 2
+    },
+    {
+      "id": "central-duet",
+      "group": "layout",
+      "points": 2
+    },
+    {
+      "id": "contrasting-shores",
+      "group": "boundary",
+      "points": 3
+    },
+    {
+      "id": "stratum-crest",
+      "group": "population",
+      "points": 2
+    }
+  ],
+  "samples": 1000000,
+  "seed": 4032109854,
+  "histogram": [
+    {
+      "score": 1,
+      "count": 1
+    },
+    {
+      "score": 2,
+      "count": 3
+    },
+    {
+      "score": 3,
+      "count": 4
+    },
+    {
+      "score": 4,
+      "count": 55
+    },
+    {
+      "score": 5,
+      "count": 102
+    },
+    {
+      "score": 6,
+      "count": 309
+    },
+    {
+      "score": 7,
+      "count": 716
+    },
+    {
+      "score": 8,
+      "count": 1413
+    },
+    {
+      "score": 9,
+      "count": 2891
+    },
+    {
+      "score": 10,
+      "count": 5110
+    },
+    {
+      "score": 11,
+      "count": 8401
+    },
+    {
+      "score": 12,
+      "count": 13777
+    },
+    {
+      "score": 13,
+      "count": 18680
+    },
+    {
+      "score": 14,
+      "count": 27284
+    },
+    {
+      "score": 15,
+      "count": 32936
+    },
+    {
+      "score": 16,
+      "count": 40240
+    },
+    {
+      "score": 17,
+      "count": 41826
+    },
+    {
+      "score": 18,
+      "count": 48967
+    },
+    {
+      "score": 19,
+      "count": 43469
+    },
+    {
+      "score": 20,
+      "count": 50166
+    },
+    {
+      "score": 21,
+      "count": 39509
+    },
+    {
+      "score": 22,
+      "count": 41705
+    },
+    {
+      "score": 23,
+      "count": 33116
+    },
+    {
+      "score": 24,
+      "count": 33335
+    },
+    {
+      "score": 25,
+      "count": 27356
+    },
+    {
+      "score": 26,
+      "count": 27059
+    },
+    {
+      "score": 27,
+      "count": 22599
+    },
+    {
+      "score": 28,
+      "count": 23780
+    },
+    {
+      "score": 29,
+      "count": 18829
+    },
+    {
+      "score": 30,
+      "count": 20233
+    },
+    {
+      "score": 31,
+      "count": 15505
+    },
+    {
+      "score": 32,
+      "count": 17372
+    },
+    {
+      "score": 33,
+      "count": 13409
+    },
+    {
+      "score": 34,
+      "count": 15091
+    },
+    {
+      "score": 35,
+      "count": 12158
+    },
+    {
+      "score": 36,
+      "count": 12327
+    },
+    {
+      "score": 37,
+      "count": 10985
+    },
+    {
+      "score": 38,
+      "count": 10245
+    },
+    {
+      "score": 39,
+      "count": 9426
+    },
+    {
+      "score": 40,
+      "count": 7947
+    },
+    {
+      "score": 41,
+      "count": 7582
+    },
+    {
+      "score": 42,
+      "count": 5785
+    },
+    {
+      "score": 43,
+      "count": 5736
+    },
+    {
+      "score": 44,
+      "count": 4225
+    },
+    {
+      "score": 45,
+      "count": 4239
+    },
+    {
+      "score": 46,
+      "count": 3229
+    },
+    {
+      "score": 47,
+      "count": 3446
+    },
+    {
+      "score": 48,
+      "count": 3109
+    },
+    {
+      "score": 49,
+      "count": 3508
+    },
+    {
+      "score": 50,
+      "count": 3840
+    },
+    {
+      "score": 51,
+      "count": 4934
+    },
+    {
+      "score": 52,
+      "count": 5167
+    },
+    {
+      "score": 53,
+      "count": 7006
+    },
+    {
+      "score": 54,
+      "count": 6395
+    },
+    {
+      "score": 55,
+      "count": 8035
+    },
+    {
+      "score": 56,
+      "count": 7795
+    },
+    {
+      "score": 57,
+      "count": 8048
+    },
+    {
+      "score": 58,
+      "count": 7745
+    },
+    {
+      "score": 59,
+      "count": 7290
+    },
+    {
+      "score": 60,
+      "count": 9106
+    },
+    {
+      "score": 61,
+      "count": 7137
+    },
+    {
+      "score": 62,
+      "count": 9480
+    },
+    {
+      "score": 63,
+      "count": 6596
+    },
+    {
+      "score": 64,
+      "count": 8095
+    },
+    {
+      "score": 65,
+      "count": 6568
+    },
+    {
+      "score": 66,
+      "count": 5029
+    },
+    {
+      "score": 67,
+      "count": 5735
+    },
+    {
+      "score": 68,
+      "count": 3679
+    },
+    {
+      "score": 69,
+      "count": 4368
+    },
+    {
+      "score": 70,
+      "count": 3138
+    },
+    {
+      "score": 71,
+      "count": 3855
+    },
+    {
+      "score": 72,
+      "count": 3260
+    },
+    {
+      "score": 73,
+      "count": 3256
+    },
+    {
+      "score": 74,
+      "count": 2891
+    },
+    {
+      "score": 75,
+      "count": 4041
+    },
+    {
+      "score": 76,
+      "count": 5040
+    },
+    {
+      "score": 77,
+      "count": 4441
+    },
+    {
+      "score": 78,
+      "count": 5113
+    },
+    {
+      "score": 79,
+      "count": 4555
+    },
+    {
+      "score": 80,
+      "count": 4692
+    },
+    {
+      "score": 81,
+      "count": 4344
+    },
+    {
+      "score": 82,
+      "count": 3499
+    },
+    {
+      "score": 83,
+      "count": 3543
+    },
+    {
+      "score": 84,
+      "count": 1563
+    },
+    {
+      "score": 85,
+      "count": 2432
+    },
+    {
+      "score": 86,
+      "count": 1302
+    },
+    {
+      "score": 87,
+      "count": 1643
+    },
+    {
+      "score": 88,
+      "count": 1058
+    },
+    {
+      "score": 89,
+      "count": 1273
+    },
+    {
+      "score": 90,
+      "count": 1147
+    },
+    {
+      "score": 91,
+      "count": 1012
+    },
+    {
+      "score": 92,
+      "count": 911
+    },
+    {
+      "score": 93,
+      "count": 893
+    },
+    {
+      "score": 94,
+      "count": 867
+    },
+    {
+      "score": 95,
+      "count": 877
+    },
+    {
+      "score": 96,
+      "count": 771
+    },
+    {
+      "score": 97,
+      "count": 783
+    },
+    {
+      "score": 98,
+      "count": 590
+    },
+    {
+      "score": 99,
+      "count": 679
+    },
+    {
+      "score": 100,
+      "count": 485
+    },
+    {
+      "score": 101,
+      "count": 434
+    },
+    {
+      "score": 102,
+      "count": 330
+    },
+    {
+      "score": 103,
+      "count": 253
+    },
+    {
+      "score": 104,
+      "count": 299
+    },
+    {
+      "score": 105,
+      "count": 200
+    },
+    {
+      "score": 106,
+      "count": 196
+    },
+    {
+      "score": 107,
+      "count": 130
+    },
+    {
+      "score": 108,
+      "count": 152
+    },
+    {
+      "score": 109,
+      "count": 116
+    },
+    {
+      "score": 110,
+      "count": 137
+    },
+    {
+      "score": 111,
+      "count": 113
+    },
+    {
+      "score": 112,
+      "count": 156
+    },
+    {
+      "score": 113,
+      "count": 83
+    },
+    {
+      "score": 114,
+      "count": 189
+    },
+    {
+      "score": 115,
+      "count": 182
+    },
+    {
+      "score": 116,
+      "count": 175
+    },
+    {
+      "score": 117,
+      "count": 118
+    },
+    {
+      "score": 118,
+      "count": 111
+    },
+    {
+      "score": 119,
+      "count": 114
+    },
+    {
+      "score": 120,
+      "count": 84
+    },
+    {
+      "score": 121,
+      "count": 194
+    },
+    {
+      "score": 122,
+      "count": 39
+    },
+    {
+      "score": 123,
+      "count": 119
+    },
+    {
+      "score": 124,
+      "count": 24
+    },
+    {
+      "score": 125,
+      "count": 151
+    },
+    {
+      "score": 126,
+      "count": 8
+    },
+    {
+      "score": 127,
+      "count": 69
+    },
+    {
+      "score": 128,
+      "count": 105
+    },
+    {
+      "score": 129,
+      "count": 58
+    },
+    {
+      "score": 130,
+      "count": 65
+    },
+    {
+      "score": 131,
+      "count": 34
+    },
+    {
+      "score": 132,
+      "count": 14
+    },
+    {
+      "score": 133,
+      "count": 11
+    },
+    {
+      "score": 134,
+      "count": 60
+    },
+    {
+      "score": 135,
+      "count": 33
+    },
+    {
+      "score": 136,
+      "count": 7
+    },
+    {
+      "score": 137,
+      "count": 17
+    },
+    {
+      "score": 138,
+      "count": 8
+    },
+    {
+      "score": 139,
+      "count": 11
+    },
+    {
+      "score": 140,
+      "count": 36
+    },
+    {
+      "score": 141,
+      "count": 8
+    },
+    {
+      "score": 142,
+      "count": 18
+    },
+    {
+      "score": 143,
+      "count": 19
+    },
+    {
+      "score": 144,
+      "count": 5
+    },
+    {
+      "score": 145,
+      "count": 11
+    },
+    {
+      "score": 146,
+      "count": 1
+    },
+    {
+      "score": 147,
+      "count": 10
+    },
+    {
+      "score": 148,
+      "count": 18
+    },
+    {
+      "score": 149,
+      "count": 5
+    },
+    {
+      "score": 150,
+      "count": 3
+    },
+    {
+      "score": 151,
+      "count": 4
+    },
+    {
+      "score": 152,
+      "count": 3
+    },
+    {
+      "score": 153,
+      "count": 2
+    },
+    {
+      "score": 154,
+      "count": 4
+    },
+    {
+      "score": 155,
+      "count": 13
+    },
+    {
+      "score": 156,
+      "count": 2
+    },
+    {
+      "score": 158,
+      "count": 2
+    },
+    {
+      "score": 159,
+      "count": 2
+    },
+    {
+      "score": 162,
+      "count": 2
+    },
+    {
+      "score": 163,
+      "count": 1
+    },
+    {
+      "score": 165,
+      "count": 29
+    },
+    {
+      "score": 166,
+      "count": 4
+    },
+    {
+      "score": 176,
+      "count": 2
+    }
+  ],
+  "traitFrequencies": {
+    "connected": 355798,
+    "islands": 10150,
+    "cavities": 11375,
+    "mirror-x": 101365,
+    "mirror-y": 101166,
+    "double-mirror": 51122,
+    "rotation": 50824,
+    "span": 126652,
+    "cross": 6180,
+    "interior": 8007,
+    "centered": 103781,
+    "ring": 1963,
+    "symmetric-islands": 147871,
+    "hidden-heart": 3794,
+    "maze": 9203,
+    "twin-isles": 1777,
+    "archipelago": 420860,
+    "stardust": 405758,
+    "domino": 281958,
+    "triplets": 196,
+    "mainland": 31172,
+    "string-of-pearls": 4208,
+    "living-thread": 6,
+    "diagonal-main": 2393,
+    "diagonal-anti": 2369,
+    "half-turn": 99788,
+    "eightfold": 2160,
+    "counterpoint": 7,
+    "tiled-quarters": 40,
+    "crystal-square": 211822,
+    "amber-window": 66457,
+    "little-cross": 27792,
+    "saltire": 19240,
+    "staircase": 215873,
+    "hammerhead": 55578,
+    "elbow": 226806,
+    "zigzag": 51921,
+    "stone-arch": 127905,
+    "hourglass": 55928,
+    "checkerboard": 199,
+    "ladder": 18308,
+    "ribbed": 4538,
+    "parallel-veins": 25835,
+    "cross-current": 2047,
+    "herringbone": 341,
+    "woven-mat": 700,
+    "four-corners": 64270,
+    "frame": 67,
+    "one-shore": 32922,
+    "coast-to-coast": 253497,
+    "four-ports": 8072,
+    "cornerless": 223015,
+    "half-filled": 54170,
+    "sparse-sky": 0,
+    "dense-stratum": 0,
+    "even-quadrants": 118351,
+    "pinhole": 432,
+    "rising-tide": 16344,
+    "quiet-channel": 234449,
+    "central-gem": 137134,
+    "lake": 28826,
+    "cross-forward-5": 469479,
+    "cross-forward-9": 113921,
+    "cross-forward-13": 2524,
+    "cross-x-5": 425090,
+    "cross-x-9": 34336,
+    "cross-x-13": 26,
+    "solid-2": 699976,
+    "solid-4": 47816,
+    "solid-5": 1726,
+    "solid-6": 2,
+    "solid-7": 0,
+    "solid-8": 0,
+    "frame-4": 13880,
+    "frame-5": 6297,
+    "frame-6": 3162,
+    "frame-7": 0,
+    "frame-8": 0,
+    "lines-3": 1687,
+    "lines-4": 95,
+    "grid-2": 607,
+    "grid-3": 0,
+    "holes-3": 960,
+    "stone-hook": 225812,
+    "ship-bow": 96737,
+    "budding-branch": 138909,
+    "twin-crystal": 90036,
+    "stone-moth": 56283,
+    "saddle": 114322,
+    "single-pebble": 582059,
+    "paired-pebble": 459465,
+    "equal-fragments": 438359,
+    "two-corners": 230278,
+    "narrow-gate": 495216,
+    "gentle-balance": 479787,
+    "central-ember": 205049,
+    "central-duet": 261534,
+    "contrasting-shores": 348238,
+    "stratum-crest": 429245
+  }
+}

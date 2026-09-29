@@ -6,9 +6,11 @@ python3 local.py dev --debug --open      开发日志并打开浏览器
 python3 local.py build --debug           构建 dist，包含源码映射
 python3 local.py preview --debug --open  构建并模拟 GitHub Pages
 python3 local.py preview --skip-build    仅预览现有 dist，无需 Node
+python3 local.py dev --unlock-all        开发服务器，并解锁全部结构图鉴
 
 每次 dev 启动或重新构建会生成新的本地版本，浏览器首次载入该版本时清空游戏存档并允许重新抽取。
 同版本刷新、热更新及 --skip-build 不再重置。仅影响本机/私网访问，不影响 GitHub Pages 正式站。
+--unlock-all 只在 localhost 与私网地址生效，避免调试开关随构建产物公开。
 """
 
 import argparse
@@ -67,13 +69,14 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     parser.add_argument("--debug", action="store_true", help="dev 开启 Vite 日志；build/preview 构建生成 source map")
     parser.add_argument("--install", action="store_true", help="强制执行 npm ci 重装依赖；缺少依赖时自动安装")
     parser.add_argument("--skip-build", action="store_true", help="仅用于 preview，直接预览已有 dist")
+    parser.add_argument("--unlock-all", action="store_true", help="解锁全部结构图鉴，默认关闭；仅在 localhost 与私网地址生效")
     args = parser.parse_args(argv)
     if args.skip_build and args.mode != "preview":
         parser.error("--skip-build 仅适用于 preview。")
-    if args.skip_build and (args.debug or args.install):
-        parser.error("--skip-build 不能与 --debug 或 --install 同用；调试构建请移除 --skip-build。")
-    if args.mode == "build" and (args.open or args.port is not None or args.base_path is not None or args.host != "127.0.0.1"):
-        parser.error("build 只生成文件，不接受 --open、--host、--port 或 --base-path。")
+    if args.skip_build and (args.debug or args.install or args.unlock_all):
+        parser.error("--skip-build 不能与 --debug、--install 或 --unlock-all 同用；调试构建请移除 --skip-build。")
+    if args.mode == "build" and (args.open or args.port is not None or args.base_path is not None or args.host != "127.0.0.1" or args.unlock_all):
+        parser.error("build 只生成文件，不接受 --open、--host、--port、--base-path 或 --unlock-all；需要解锁全部图鉴请用 dev 或 preview。")
     args.port = args.port or (5173 if args.mode == "dev" else 4173)
     args.base_path = args.base_path or ("/" if args.mode == "dev" else "/Fossildle/")
     return args
@@ -193,18 +196,21 @@ def open_when_ready(url: str, process: subprocess.Popen, cancelled: threading.Ev
     log(f"浏览器未自动打开，可手动访问 {url}")
 
 
-def local_environment() -> dict[str, str]:
+def local_environment(unlock_all: bool = False) -> dict[str, str]:
     import uuid
     environment = os.environ.copy()
     environment["VITE_FOSSILDLE_LOCAL_BUILD"] = f"{time.time_ns():020d}-{uuid.uuid4().hex}"
     log("本地模式：载入此次版本时重置化石存档与身份，可重新抽取；同版本刷新不重置。")
+    if unlock_all:
+        environment["VITE_FOSSILDLE_UNLOCK_ALL"] = "1"
+        log("已开启 --unlock-all：结构图鉴全部解锁（仅 localhost 与私网地址生效）。")
     return environment
 
 
-def run(command: list[str], open_url: Optional[str] = None, *, reset_local: bool = False) -> None:
+def run(command: list[str], open_url: Optional[str] = None, *, reset_local: bool = False, unlock_all: bool = False) -> None:
     log("执行：" + " ".join(command))
     options = {"start_new_session": True} if os.name == "posix" else {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
-    process = subprocess.Popen(command, cwd=ROOT, env=local_environment() if reset_local else None, **options)
+    process = subprocess.Popen(command, cwd=ROOT, env=local_environment(unlock_all) if reset_local else None, **options)
     cancelled = threading.Event()
     if open_url:
         threading.Thread(target=open_when_ready, args=(open_url, process, cancelled), daemon=True).start()
@@ -239,8 +245,8 @@ def prepare_dependencies(force: bool = False) -> str:
     return npm
 
 
-def build(npm: str, debug: bool) -> None:
-    run([npm, "run", "build"] + (["--", "--sourcemap"] if debug else []), reset_local=True)
+def build(npm: str, debug: bool, unlock_all: bool = False) -> None:
+    run([npm, "run", "build"] + (["--", "--sourcemap"] if debug else []), reset_local=True, unlock_all=unlock_all)
     if not (DIST / "index.html").is_file():
         raise RuntimeError("构建未生成 dist/index.html，已停止预览。")
     log(f"构建完成：{DIST}")
@@ -328,9 +334,9 @@ def main(argv: Optional[list[str]] = None) -> int:
             if args.debug:
                 command.append("--debug")
             release_port(args.port)
-            run(command, url if args.open else None, reset_local=True)
+            run(command, url if args.open else None, reset_local=True, unlock_all=args.unlock_all)
         else:
-            build(npm, args.debug)
+            build(npm, args.debug, args.unlock_all)
             if args.mode == "preview":
                 preview(args)
         return 0

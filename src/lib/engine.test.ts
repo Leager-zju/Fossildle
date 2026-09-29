@@ -47,7 +47,7 @@ describe('化石生成与结构规则', () => {
     expect(metrics).toMatchObject({ count: 12, mirrorX: true, mirrorY: true, quarterTurn: true, interior: true, centered: true })
     const traits = evaluateTraits(metrics)
     expect(traits.map(t => t.id)).toEqual(expect.arrayContaining(['ring', 'hidden-heart']))
-    expect(calculateScore(traits)).toBe(72)
+    expect(calculateScore(traits)).toBe(140)
   })
   it('化石用四邻接，空白用八邻接', () => {
     const board = grid(['........', '........', '...#....', '..#.#...', '...#....', '........', '........', '........'])
@@ -71,10 +71,11 @@ describe('化石生成与结构规则', () => {
     expect(() => fromHex('not-a-fossil')).toThrow()
     expect(() => analyzeFossil([true])).toThrow()
   })
-  it('同一组仅取最高分，组合奖励封顶', () => {
+  it('上下位结构只计上位，组合奖励封顶', () => {
     const traits = evaluateTraits(analyzeFossil(ring))
     const symmetry = traits.filter(t => t.group === 'symmetry')
-    expect(calculateScore(symmetry)).toBe(30)
+    // 八面玲珑压制双轴对称与两条对角镜像；四向回转压制半周重逢。
+    expect(calculateScore(symmetry)).toBe(72)
     expect(calculateScore([...traits.filter(t => t.group === 'combo'), ...traits.filter(t => t.group === 'combo')])).toBe(12)
   })
 })

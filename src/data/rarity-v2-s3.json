@@ -1,0 +1,824 @@
+{
+  "generatorVersion": 2,
+  "scoringVersion": 3,
+  "scoringRules": [
+    {
+      "id": "connected",
+      "group": "connection",
+      "points": 7
+    },
+    {
+      "id": "islands",
+      "group": "connection",
+      "points": 4
+    },
+    {
+      "id": "eye",
+      "group": "cavity",
+      "points": 3
+    },
+    {
+      "id": "cavities",
+      "group": "cavity",
+      "points": 6
+    },
+    {
+      "id": "mirror-x",
+      "group": "symmetry",
+      "points": 23
+    },
+    {
+      "id": "mirror-y",
+      "group": "symmetry",
+      "points": 23
+    },
+    {
+      "id": "double-mirror",
+      "group": "symmetry",
+      "points": 34
+    },
+    {
+      "id": "rotation",
+      "group": "symmetry",
+      "points": 34
+    },
+    {
+      "id": "span",
+      "group": "span",
+      "points": 4
+    },
+    {
+      "id": "cross",
+      "group": "span",
+      "points": 7
+    },
+    {
+      "id": "interior",
+      "group": "layout",
+      "points": 20
+    },
+    {
+      "id": "centered",
+      "group": "layout",
+      "points": 8
+    },
+    {
+      "id": "ring",
+      "group": "combo",
+      "points": 13
+    },
+    {
+      "id": "symmetric-islands",
+      "group": "combo",
+      "points": 13
+    },
+    {
+      "id": "hidden-heart",
+      "group": "combo",
+      "points": 13
+    },
+    {
+      "id": "maze",
+      "group": "combo",
+      "points": 9
+    },
+    {
+      "id": "twin-isles",
+      "group": "connection",
+      "points": 11
+    },
+    {
+      "id": "archipelago",
+      "group": "connection",
+      "points": 2
+    },
+    {
+      "id": "stardust",
+      "group": "connection",
+      "points": 2
+    },
+    {
+      "id": "domino",
+      "group": "connection",
+      "points": 2
+    },
+    {
+      "id": "triplets",
+      "group": "connection",
+      "points": 14
+    },
+    {
+      "id": "mainland",
+      "group": "connection",
+      "points": 3
+    },
+    {
+      "id": "string-of-pearls",
+      "group": "connection",
+      "points": 13
+    },
+    {
+      "id": "living-thread",
+      "group": "connection",
+      "points": 13
+    },
+    {
+      "id": "diagonal-main",
+      "group": "symmetry",
+      "points": 20
+    },
+    {
+      "id": "diagonal-anti",
+      "group": "symmetry",
+      "points": 20
+    },
+    {
+      "id": "half-turn",
+      "group": "symmetry",
+      "points": 23
+    },
+    {
+      "id": "eightfold",
+      "group": "symmetry",
+      "points": 38
+    },
+    {
+      "id": "counterpoint",
+      "group": "symmetry",
+      "points": 23
+    },
+    {
+      "id": "tiled-quarters",
+      "group": "symmetry",
+      "points": 34
+    },
+    {
+      "id": "crystal-square",
+      "group": "geometry",
+      "points": 4
+    },
+    {
+      "id": "amber-window",
+      "group": "geometry",
+      "points": 4
+    },
+    {
+      "id": "little-cross",
+      "group": "geometry",
+      "points": 4
+    },
+    {
+      "id": "saltire",
+      "group": "geometry",
+      "points": 4
+    },
+    {
+      "id": "staircase",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "hammerhead",
+      "group": "geometry",
+      "points": 3
+    },
+    {
+      "id": "elbow",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "zigzag",
+      "group": "geometry",
+      "points": 3
+    },
+    {
+      "id": "stone-arch",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "hourglass",
+      "group": "geometry",
+      "points": 3
+    },
+    {
+      "id": "checkerboard",
+      "group": "texture",
+      "points": 8
+    },
+    {
+      "id": "ladder",
+      "group": "texture",
+      "points": 5
+    },
+    {
+      "id": "ribbed",
+      "group": "texture",
+      "points": 7
+    },
+    {
+      "id": "diagonal-vein",
+      "group": "texture",
+      "points": 2
+    },
+    {
+      "id": "parallel-veins",
+      "group": "span",
+      "points": 8
+    },
+    {
+      "id": "cross-current",
+      "group": "span",
+      "points": 12
+    },
+    {
+      "id": "herringbone",
+      "group": "texture",
+      "points": 7
+    },
+    {
+      "id": "woven-mat",
+      "group": "texture",
+      "points": 8
+    },
+    {
+      "id": "four-corners",
+      "group": "boundary",
+      "points": 4
+    },
+    {
+      "id": "frame",
+      "group": "boundary",
+      "points": 20
+    },
+    {
+      "id": "one-shore",
+      "group": "boundary",
+      "points": 13
+    },
+    {
+      "id": "coast-to-coast",
+      "group": "boundary",
+      "points": 2
+    },
+    {
+      "id": "four-ports",
+      "group": "boundary",
+      "points": 13
+    },
+    {
+      "id": "cornerless",
+      "group": "boundary",
+      "points": 4
+    },
+    {
+      "id": "half-filled",
+      "group": "population",
+      "points": 3
+    },
+    {
+      "id": "sparse-sky",
+      "group": "population",
+      "points": 13
+    },
+    {
+      "id": "dense-stratum",
+      "group": "population",
+      "points": 13
+    },
+    {
+      "id": "even-quadrants",
+      "group": "layout",
+      "points": 6
+    },
+    {
+      "id": "two-windows",
+      "group": "cavity",
+      "points": 6
+    },
+    {
+      "id": "pinhole",
+      "group": "cavity",
+      "points": 9
+    },
+    {
+      "id": "rising-tide",
+      "group": "population",
+      "points": 8
+    },
+    {
+      "id": "quiet-channel",
+      "group": "layout",
+      "points": 4
+    },
+    {
+      "id": "central-gem",
+      "group": "geometry",
+      "points": 4
+    },
+    {
+      "id": "lake",
+      "group": "cavity",
+      "points": 7
+    },
+    {
+      "id": "small-square",
+      "group": "geometry",
+      "points": 1
+    },
+    {
+      "id": "clay-brick",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "loose-zigzag",
+      "group": "texture",
+      "points": 1
+    },
+    {
+      "id": "pennant",
+      "group": "geometry",
+      "points": 1
+    },
+    {
+      "id": "little-cup",
+      "group": "geometry",
+      "points": 1
+    },
+    {
+      "id": "shadow-bar",
+      "group": "texture",
+      "points": 1
+    },
+    {
+      "id": "distant-pair",
+      "group": "texture",
+      "points": 1
+    },
+    {
+      "id": "open-book",
+      "group": "geometry",
+      "points": 1
+    },
+    {
+      "id": "three-sparks",
+      "group": "texture",
+      "points": 1
+    },
+    {
+      "id": "chipped-brick",
+      "group": "geometry",
+      "points": 1
+    },
+    {
+      "id": "stone-hook",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "broken-ring",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "ship-bow",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "budding-branch",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "twin-crystal",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "comet-tail",
+      "group": "texture",
+      "points": 2
+    },
+    {
+      "id": "fossil-comb",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "stone-moth",
+      "group": "texture",
+      "points": 2
+    },
+    {
+      "id": "saddle",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "dotted-bridge",
+      "group": "texture",
+      "points": 2
+    },
+    {
+      "id": "single-pebble",
+      "group": "connection",
+      "points": 1
+    },
+    {
+      "id": "paired-pebble",
+      "group": "connection",
+      "points": 1
+    },
+    {
+      "id": "pocket-island",
+      "group": "connection",
+      "points": 1
+    },
+    {
+      "id": "broad-island",
+      "group": "connection",
+      "points": 1
+    },
+    {
+      "id": "equal-fragments",
+      "group": "connection",
+      "points": 2
+    },
+    {
+      "id": "short-thread",
+      "group": "connection",
+      "points": 1
+    },
+    {
+      "id": "branch-garden",
+      "group": "connection",
+      "points": 1
+    },
+    {
+      "id": "crossroads",
+      "group": "geometry",
+      "points": 2
+    },
+    {
+      "id": "leaf-tips",
+      "group": "connection",
+      "points": 1
+    },
+    {
+      "id": "shared-horizon",
+      "group": "connection",
+      "points": 2
+    },
+    {
+      "id": "balanced-rim",
+      "group": "boundary",
+      "points": 1
+    },
+    {
+      "id": "two-corners",
+      "group": "boundary",
+      "points": 2
+    },
+    {
+      "id": "coastal-trail",
+      "group": "boundary",
+      "points": 2
+    },
+    {
+      "id": "narrow-gate",
+      "group": "boundary",
+      "points": 2
+    },
+    {
+      "id": "gentle-balance",
+      "group": "layout",
+      "points": 2
+    },
+    {
+      "id": "central-ember",
+      "group": "layout",
+      "points": 2
+    },
+    {
+      "id": "central-duet",
+      "group": "layout",
+      "points": 2
+    },
+    {
+      "id": "middle-density",
+      "group": "population",
+      "points": 1
+    },
+    {
+      "id": "contrasting-shores",
+      "group": "boundary",
+      "points": 3
+    },
+    {
+      "id": "stratum-crest",
+      "group": "population",
+      "points": 2
+    }
+  ],
+  "samples": 1000000,
+  "seed": 4032109854,
+  "histogram": [
+    {
+      "score": 4,
+      "count": 5
+    },
+    {
+      "score": 5,
+      "count": 71
+    },
+    {
+      "score": 6,
+      "count": 545
+    },
+    {
+      "score": 7,
+      "count": 3405
+    },
+    {
+      "score": 8,
+      "count": 13304
+    },
+    {
+      "score": 9,
+      "count": 42556
+    },
+    {
+      "score": 10,
+      "count": 94866
+    },
+    {
+      "score": 11,
+      "count": 172699
+    },
+    {
+      "score": 12,
+      "count": 200423
+    },
+    {
+      "score": 13,
+      "count": 165553
+    },
+    {
+      "score": 14,
+      "count": 111875
+    },
+    {
+      "score": 15,
+      "count": 61651
+    },
+    {
+      "score": 16,
+      "count": 39682
+    },
+    {
+      "score": 17,
+      "count": 27432
+    },
+    {
+      "score": 18,
+      "count": 19270
+    },
+    {
+      "score": 19,
+      "count": 14841
+    },
+    {
+      "score": 20,
+      "count": 10519
+    },
+    {
+      "score": 21,
+      "count": 6681
+    },
+    {
+      "score": 22,
+      "count": 4741
+    },
+    {
+      "score": 23,
+      "count": 3229
+    },
+    {
+      "score": 24,
+      "count": 2055
+    },
+    {
+      "score": 25,
+      "count": 1491
+    },
+    {
+      "score": 26,
+      "count": 1107
+    },
+    {
+      "score": 27,
+      "count": 633
+    },
+    {
+      "score": 28,
+      "count": 408
+    },
+    {
+      "score": 29,
+      "count": 258
+    },
+    {
+      "score": 30,
+      "count": 169
+    },
+    {
+      "score": 31,
+      "count": 89
+    },
+    {
+      "score": 32,
+      "count": 81
+    },
+    {
+      "score": 33,
+      "count": 43
+    },
+    {
+      "score": 34,
+      "count": 41
+    },
+    {
+      "score": 35,
+      "count": 38
+    },
+    {
+      "score": 36,
+      "count": 30
+    },
+    {
+      "score": 37,
+      "count": 31
+    },
+    {
+      "score": 38,
+      "count": 27
+    },
+    {
+      "score": 39,
+      "count": 34
+    },
+    {
+      "score": 40,
+      "count": 23
+    },
+    {
+      "score": 41,
+      "count": 22
+    },
+    {
+      "score": 42,
+      "count": 26
+    },
+    {
+      "score": 43,
+      "count": 16
+    },
+    {
+      "score": 44,
+      "count": 14
+    },
+    {
+      "score": 45,
+      "count": 6
+    },
+    {
+      "score": 46,
+      "count": 1
+    },
+    {
+      "score": 47,
+      "count": 5
+    },
+    {
+      "score": 48,
+      "count": 1
+    },
+    {
+      "score": 49,
+      "count": 2
+    },
+    {
+      "score": 51,
+      "count": 1
+    }
+  ],
+  "traitFrequencies": {
+    "connected": 2773,
+    "islands": 39397,
+    "eye": 83498,
+    "cavities": 7737,
+    "mirror-x": 0,
+    "mirror-y": 0,
+    "double-mirror": 0,
+    "rotation": 0,
+    "span": 59868,
+    "cross": 1814,
+    "interior": 0,
+    "centered": 915,
+    "ring": 0,
+    "symmetric-islands": 0,
+    "hidden-heart": 0,
+    "maze": 351,
+    "twin-isles": 39,
+    "archipelago": 429722,
+    "stardust": 378240,
+    "domino": 258812,
+    "triplets": 2,
+    "mainland": 118434,
+    "string-of-pearls": 0,
+    "living-thread": 0,
+    "diagonal-main": 0,
+    "diagonal-anti": 0,
+    "half-turn": 0,
+    "eightfold": 0,
+    "counterpoint": 0,
+    "tiled-quarters": 0,
+    "crystal-square": 54503,
+    "amber-window": 66088,
+    "little-cross": 67027,
+    "saltire": 65036,
+    "staircase": 238239,
+    "hammerhead": 110403,
+    "elbow": 375014,
+    "zigzag": 96658,
+    "stone-arch": 226703,
+    "hourglass": 124426,
+    "checkerboard": 726,
+    "ladder": 23172,
+    "ribbed": 1395,
+    "diagonal-vein": 493066,
+    "parallel-veins": 827,
+    "cross-current": 18,
+    "herringbone": 1402,
+    "woven-mat": 805,
+    "four-corners": 62457,
+    "frame": 0,
+    "one-shore": 0,
+    "coast-to-coast": 332174,
+    "four-ports": 6,
+    "cornerless": 62578,
+    "half-filled": 99748,
+    "sparse-sky": 0,
+    "dense-stratum": 0,
+    "even-quadrants": 3836,
+    "two-windows": 3682,
+    "pinhole": 210,
+    "rising-tide": 509,
+    "quiet-channel": 45511,
+    "central-gem": 62778,
+    "lake": 1552,
+    "small-square": 893646,
+    "clay-brick": 524398,
+    "loose-zigzag": 874879,
+    "pennant": 980501,
+    "little-cup": 851471,
+    "shadow-bar": 894266,
+    "distant-pair": 874137,
+    "open-book": 989258,
+    "three-sparks": 799898,
+    "chipped-brick": 884165,
+    "stone-hook": 222258,
+    "broken-ring": 423987,
+    "ship-bow": 223657,
+    "budding-branch": 243413,
+    "twin-crystal": 223726,
+    "comet-tail": 423998,
+    "fossil-comb": 232201,
+    "stone-moth": 231731,
+    "saddle": 244268,
+    "dotted-bridge": 426387,
+    "single-pebble": 938777,
+    "paired-pebble": 621470,
+    "pocket-island": 698117,
+    "broad-island": 690237,
+    "equal-fragments": 474789,
+    "short-thread": 692536,
+    "branch-garden": 752949,
+    "crossroads": 586011,
+    "leaf-tips": 819603,
+    "shared-horizon": 571073,
+    "balanced-rim": 654633,
+    "two-corners": 375123,
+    "coastal-trail": 562302,
+    "narrow-gate": 361369,
+    "gentle-balance": 490352,
+    "central-ember": 250221,
+    "central-duet": 374784,
+    "middle-density": 738940,
+    "contrasting-shores": 147887,
+    "stratum-crest": 508306
+  }
+}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, BookOpen, Check, Copy, Download, ExternalLink, Info, Layers3, LoaderCircle, Pickaxe, Share2, ShieldCheck, X } from 'lucide-react'
+import { ArrowRight, BookOpen, Check, Copy, Download, ExternalLink, Info, Layers3, LoaderCircle, Pickaxe, RotateCcw, Share2, ShieldCheck, X } from 'lucide-react'
 import { Discovery } from './components/Discovery'
 import { Cabinet, FieldGuide } from './components/CollectionPages'
 import { About } from './components/About'
@@ -34,6 +34,8 @@ export default function App() {
   const [shareBusy, setShareBusy] = useState(false)
   const [pendingImport, setPendingImport] = useState<Collection | null>(null)
   const [importBusy, setImportBusy] = useState(false)
+  const [pendingReset, setPendingReset] = useState(false)
+  const [resetBusy, setResetBusy] = useState(false)
   const mainRef = useRef<HTMLElement>(null)
   const todaySpecimen = collection.specimens.find(specimen => specimen.date === date)
   const sharedRecord = useMemo(() => parseSpecimenHash(route), [route])
@@ -141,6 +143,17 @@ export default function App() {
     } catch { setToast('恢复失败，当前浏览器无法写入存档。') }
     finally { setImportBusy(false) }
   }
+  const confirmReset = async () => {
+    if (resetBusy) return
+    setResetBusy(true)
+    try {
+      const fresh = createCollection()
+      await withStorageLock(() => { assertCurrentLocalBuild(); saveCollection(fresh); setCollection(fresh); setStorageError(null) })
+      setPendingReset(false)
+      setToast('存档已重置，可以重新开始发现。')
+    } catch { setToast('重置失败，当前浏览器无法写入存档。') }
+    finally { setResetBusy(false) }
+  }
   const copyLink = async () => {
     if (!shareSpecimen) return
     try { await navigator.clipboard.writeText(shareText(shareSpecimen)); setToast('分享文案与链接已复制。') }
@@ -176,12 +189,13 @@ export default function App() {
     <main id="main-content" ref={mainRef} tabIndex={-1}>
       {LOCAL_BUILD && <div className="local-build-note"><Pickaxe size={14} /><span>本地调试 · 重新构建或重启开发服务后重置收藏，可重新抽取；本轮刷新保留结果，不影响线上存档。</span></div>}
       {storageError && <div className="storage-warning" role="alert"><Info size={18} /><p>{storageError}</p><a href="#about">备份与恢复 <ArrowRight size={14} /></a></div>}
-      {isDiscovery ? <Discovery key={sharedRecord ? route : date} collection={collection} specimen={busy && !sharedRecord ? undefined : ownedShared || sharedRecord || todaySpecimen} date={date} isShared={!!sharedRecord && !ownedShared} isArchive={!!ownedShared} busy={busy} disabled={!!storageError || initializing} onDiscover={() => void handleDiscover()} onShare={setShareSpecimen} onRevealComplete={handleRevealComplete} /> : route === '#cabinet' ? <Cabinet collection={collection} onFavorite={specimen => void handleFavorite(specimen)} onExport={handleExport} /> : route === '#fieldguide' ? <FieldGuide collection={collection} /> : route === '#about' ? <About onExport={handleExport} onImport={file => void handleImportFile(file)} /> : <section className="empty-state"><BookOpen size={36} /><h1>这页手记，还没有被发现。</h1><p>链接可能不完整，或来自尚不支持的规则版本。</p><a className="button button-primary" href="#today">返回今日地层 <ArrowRight size={16} /></a></section>}
+      {isDiscovery ? <Discovery key={sharedRecord ? route : date} collection={collection} specimen={busy && !sharedRecord ? undefined : ownedShared || sharedRecord || todaySpecimen} date={date} isShared={!!sharedRecord && !ownedShared} isArchive={!!ownedShared} busy={busy} disabled={!!storageError || initializing} onDiscover={() => void handleDiscover()} onShare={setShareSpecimen} onRevealComplete={handleRevealComplete} /> : route === '#cabinet' ? <Cabinet collection={collection} onFavorite={specimen => void handleFavorite(specimen)} onExport={handleExport} /> : route === '#fieldguide' ? <FieldGuide collection={collection} /> : route === '#about' ? <About onExport={handleExport} onImport={file => void handleImportFile(file)} onReset={() => setPendingReset(true)} /> : <section className="empty-state"><BookOpen size={36} /><h1>这页手记，还没有被发现。</h1><p>链接可能不完整，或来自尚不支持的规则版本。</p><a className="button button-primary" href="#today">返回今日地层 <ArrowRight size={16} /></a></section>}
     </main>
 
     <footer className="site-footer"><div className="footer-brand"><LogoMark /><span>Fossildle<small>A LITTLE PIECE OF TIME.</small></span></div><p>慢一点，看看偶然留下了什么。</p><div><span><ShieldCheck size={13} /> 本地保存</span><a href="#fieldguide">图鉴 {totalUnlocked}/{TRAITS.length}</a><a href="#about">规则与备份 <ArrowRight size={12} /></a></div></footer>
     {toast && <div className="toast" role="status"><Check size={16} /><span>{toast}</span><button className="icon-button" aria-label="关闭提示" onClick={() => setToast('')}><X size={15} /></button></div>}
     {shareSpecimen && shareData && <Modal title="让这次偶然，被更多人看见。" onClose={() => setShareSpecimen(null)}><div className="share-preview"><div className="share-preview-header"><span>Fossildle</span><small>{shareSpecimen.date}</small></div><FossilArt board={shareData.board} miniature label={shareData.name} /><h3>{shareData.name}</h3><span className={`rarity rarity-${shareData.rarity.id}`}>{shareData.rarity.name}</span><p>{shareData.description}</p></div><div className="share-controls"><button className="button button-primary" disabled={shareBusy} onClick={() => void exportImage()}>{shareBusy ? <LoaderCircle size={16} className="spin" /> : <Download size={16} />} 保存图片</button><button className="button button-outline" onClick={() => void copyLink()}><Copy size={16} /> 复制链接</button><button className="icon-button share-native" disabled={shareBusy} onClick={() => void systemShare()} aria-label="系统分享"><Share2 size={18} /></button></div><label className="share-link-label">只读链接<input readOnly value={shareUrl(shareSpecimen)} aria-label="只读分享链接" onFocus={event => event.target.select()} /></label><p className="modal-note">只分享这枚化石，不包含你的身份或整座藏馆。结果由本地生成，未经服务器认证。<a href={shareUrl(shareSpecimen)} target="_blank" rel="noreferrer">预览分享页 <ExternalLink size={12} /></a></p></Modal>}
+    {pendingReset && <Modal title="重置这座藏馆？" onClose={() => { if (!resetBusy) setPendingReset(false) }}><div className="import-summary"><RotateCcw size={30} /><strong>将清空 {collection.specimens.length} 枚化石</strong><p>重置会删除当前浏览器中的全部发现与珍藏标记，并生成新的本地身份，无法撤销。需要保留记录时请先导出备份。</p></div><div className="import-actions"><button className="button button-outline" onClick={handleExport}>先导出备份</button><button className="button button-primary" disabled={resetBusy} onClick={() => void confirmReset()}>{resetBusy ? '正在重置…' : '确认清空并重置'}</button></div></Modal>}
     {pendingImport && <Modal title="恢复这份藏馆备份？" onClose={() => { if (!importBusy) setPendingImport(null) }}><div className="import-summary"><Download size={30} /><strong>{pendingImport.specimens.length} 枚化石</strong><p>恢复会替换当前浏览器中的 {collection.specimens.length} 枚化石和本地身份，不会自动合并。建议先导出现有藏馆。</p></div><div className="import-actions"><button className="button button-outline" onClick={handleExport}>先备份当前藏馆</button><button className="button button-primary" disabled={importBusy} onClick={() => void confirmImport()}>{importBusy ? '正在恢复…' : '确认替换并恢复'}</button></div></Modal>}
   </div>
 }

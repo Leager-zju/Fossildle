@@ -47,6 +47,35 @@ test('首次并发访问共享身份，不重置已有记录', async ({ context,
   await second.close()
 })
 
+test('关于页重置存档：取消不生效，确认后清空藏馆并更换身份', async ({ page }, testInfo) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: '发现今日化石', exact: true }).click()
+  await expect(page.getByRole('button', { name: '分享发现', exact: true })).toBeVisible()
+  await page.goto('/#about')
+  await expect(page.locator('.backup-actions button')).toHaveText(['重置存档', '导出备份', '导入备份'])
+  await page.locator('.backup-panel').screenshot({ path: testInfo.outputPath('backup-panel-reset.png') })
+  const before = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), key)
+  await page.getByRole('button', { name: '重置存档' }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await expect(dialog).toContainText('将清空 1 枚化石')
+  await page.screenshot({ path: testInfo.outputPath('reset-confirm-modal.png') })
+  await page.keyboard.press('Escape')
+  await expect(dialog).toHaveCount(0)
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).specimens.length, key)).toBe(1)
+  await page.getByRole('button', { name: '重置存档' }).click()
+  await page.getByRole('button', { name: '确认清空并重置' }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  const after = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), key)
+  expect(after.specimens).toHaveLength(0)
+  expect(after.visitorId).not.toBe(before.visitorId)
+  await expect(page.locator('.toast')).toContainText('存档已重置')
+  await page.goto('/#today')
+  await expect(page.getByRole('button', { name: '发现今日化石', exact: true })).toBeEnabled()
+  await page.getByRole('link', { name: /我的藏馆/ }).click()
+  await expect(page.getByText('你的第一件藏品，还在岩石里。')).toBeVisible()
+})
+
 test('禁用本地存储时展示保护提示而非白屏', async ({ page }) => {
   await page.addInitScript(() => {
     Storage.prototype.getItem = function () { throw new DOMException('Storage disabled', 'SecurityError') }

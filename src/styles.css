@@ -100,6 +100,8 @@ h1 em { color: var(--rust); font-style: normal; }
 .button-dark:hover:not(:disabled) { background: #2d3927; }
 .button-outline { border-color: #d3d6c5; background: #faf8f16b; color: #5b6652; }
 .button-outline:hover:not(:disabled) { border-color: #9d9f89; background: #eeeee2; }
+.button-reset { border-color: #dcc7bb; background: #faf8f16b; color: #8e5537; }
+.button-reset:hover:not(:disabled) { border-color: #c1947e; background: #f7ece5; }
 .button-small { padding: 9px 13px; min-height: 37px; font-size: 11px; }
 .excavate-action .button { display: flex; min-width: 226px; width: fit-content; margin: 24px auto 13px; gap: 12px; min-height: 47px; }
 .excavate-action .button > svg:last-child { margin-left: 8px; }
@@ -224,10 +226,11 @@ h1 em { color: var(--rust); font-style: normal; }
 input::placeholder { color: #9d9f90; }
 select { font-size: 11px; padding: 9px 8px; background: #faf8f1; color: #758364; border: 1px solid var(--line); border-radius: 4px; }
 .cabinet-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; }
-.specimen-tile { background: #faf8f1; border: 1px solid var(--line); border-radius: 4px; padding: 13px 18px 20px; }
+.specimen-tile { position: relative; background: #faf8f1; border: 1px solid var(--line); border-radius: 4px; padding: 13px 18px 20px; }
 .specimen-tile:hover { border-color: #b8bba4; box-shadow: 0 5px 20px #585b3510; }
-.tile-topline { display: flex; justify-content: space-between; align-items: center; color: #939884; font: 9px var(--mono); }
-.tile-link { display: block; }
+.tile-topline { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; color: #939884; font: 9px var(--mono); }
+.tile-open { position: absolute; inset: 0; z-index: 1; border: 0; padding: 0; background: transparent; border-radius: 4px; }
+.tile-open:focus-visible { outline: 2px solid var(--rust); outline-offset: 2px; }
 .tile-art { max-width: 200px; margin: 5px auto 16px; }
 .tile-title { display: flex; justify-content: space-between; align-items: center; }
 .tile-title h2 { font: 19px var(--serif); }
@@ -323,6 +326,11 @@ select { font-size: 11px; padding: 9px 8px; background: #faf8f1; color: #758364;
 .share-preview > svg { max-width: 195px; margin: 13px auto 5px; }
 .share-preview h3 { font: 24px var(--serif); margin: 8px 0 10px; }
 .share-preview p { font-size: 10px; color: #919b80; margin: 14px 0 4px; }
+.specimen-preview-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 18px; padding: 11px 13px; border: 1px solid var(--line); background: #f7f5ec; font: 9px var(--mono); letter-spacing: .6px; color: #899678; }
+.specimen-preview-traits { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 7px; max-height: 176px; overflow-y: auto; }
+.specimen-preview-traits li { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 11px; color: #5f6a52; border-bottom: 1px dashed #e4e4d8; padding-bottom: 6px; }
+.specimen-preview-traits li:last-child { border-bottom: 0; padding-bottom: 0; }
+.specimen-preview-traits em { font: 9px var(--mono); font-style: normal; color: var(--rust); }
 .share-controls { display: flex; gap: 10px; margin: 20px 0; }
 .share-controls > .button { flex: 1; }
 .share-native { border: 1px solid #d3d9c4; height: 42px; width: 42px; }

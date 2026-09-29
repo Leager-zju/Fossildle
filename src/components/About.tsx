@@ -1,12 +1,13 @@
-import { ArrowUpRight, Download, HardDrive, Upload } from 'lucide-react'
+import { ArrowUpRight, Download, HardDrive, RotateCcw, Upload } from 'lucide-react'
 import { useRef } from 'react'
 import { SCORING_VERSION, TRAITS } from '../lib/engine'
 
 interface Props {
   onExport: () => void
   onImport: (file: File) => void
+  onReset: () => void
 }
-export function About({ onExport, onImport }: Props) {
+export function About({ onExport, onImport, onReset }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   return <>
     <section className="page-intro"><div><div className="eyebrow"><span className="tiny-line" /> A SMALL NOTE FROM THE STATION</div><h1>关于偶然，<em>也关于诚实。</em></h1><p>这里是一个小小的像素博物馆，不是一场必须获胜的比赛。</p></div></section>
@@ -20,7 +21,7 @@ export function About({ onExport, onImport }: Props) {
       <details><summary>分享会泄露我的收藏吗？</summary><p>分享链接只携带所选化石的日期、位图和规则版本，不包含浏览器身份，也不会上传整座藏馆。接收者可以查看和导出图片，但不能修改你的本地记录。分享图案不经过服务器认证，不应作为稀有度排名凭证。</p></details>
       <details><summary>更新后，老化石会改变吗？</summary><p>原位图、日期、生成版本与珍藏标记不变，不会重新抽取。所有藏品、旧分享链接与导入备份统一按评分 v{SCORING_VERSION} 重新计分，因此分数和整体稀有度可能变化。概率参考已按两代生成器分别重新校准各一百万份样本，不会用旧评分分布解释新分数。旧链接与备份格式仍然兼容。</p></details>
     </section></div>
-    <section className="backup-panel"><div className="backup-copy"><HardDrive size={26} strokeWidth={1.4} /><div><h2>给你的藏馆留一份备份。</h2><p>清除网站数据会丢失记录。导出 JSON 文件，可在另一台设备恢复。备份含本地身份，请不要公开。</p></div></div><div className="backup-actions"><button className="button button-outline" onClick={onExport}><Download size={16} /> 导出备份</button><button className="button button-dark" onClick={() => inputRef.current?.click()}><Upload size={16} /> 导入备份</button><input ref={inputRef} className="sr-only" type="file" accept="application/json,.json" aria-label="选择藏馆备份" onChange={event => { const file = event.target.files?.[0]; if (file) onImport(file); event.target.value = '' }} /></div></section>
+    <section className="backup-panel"><div className="backup-copy"><HardDrive size={26} strokeWidth={1.4} /><div><h2>给你的藏馆留一份备份。</h2><p>清除网站数据会丢失记录。导出 JSON 文件，可在另一台设备恢复。备份含本地身份，请不要公开。「重置存档」会清空全部发现、珍藏标记与本地身份，操作前建议先导出备份。</p></div></div><div className="backup-actions"><button className="button button-reset" onClick={onReset}><RotateCcw size={16} /> 重置存档</button><button className="button button-outline" onClick={onExport}><Download size={16} /> 导出备份</button><button className="button button-dark" onClick={() => inputRef.current?.click()}><Upload size={16} /> 导入备份</button><input ref={inputRef} className="sr-only" type="file" accept="application/json,.json" aria-label="选择藏馆备份" onChange={event => { const file = event.target.files?.[0]; if (file) onImport(file); event.target.value = '' }} /></div></section>
     <div className="about-bottom"><span>没有广告追踪，没有强制签到，也没有付费重抽。</span><a href="https://www.rngdle.com/" target="_blank" rel="noreferrer">灵感来自 RNGdle <ArrowUpRight size={13} /></a></div>
   </>
 }

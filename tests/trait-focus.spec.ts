@@ -101,6 +101,22 @@ test('局部晶核参与计分，高亮、取消选择与重播不改变分数',
   await expect(page.locator('.score-entry[aria-pressed="true"][data-trait="crystal-square"]')).toHaveCount(0)
 })
 
+test('“任意窗口”结构只高亮最先命中的一处，不平铺全部命中区块', async ({ page }) => {
+  const board = fromHex('ff00ff0000000000')
+  const stripes = board.filter(Boolean).length
+  await page.goto(`/#specimen/v2/2026-09-28/${toHex(board)}`)
+  const art = page.locator('.main-fossil')
+  await expect(page.locator('.field-notes')).toHaveAttribute('data-phase', 'complete')
+  const ribbed = page.locator('.score-entry[data-trait="ribbed"]')
+  await expect(ribbed).toHaveAttribute('data-awarded', '7')
+  await ribbed.locator('.score-entry-head').click()
+  await expect(ribbed.locator('.score-entry-head')).toHaveAttribute('aria-pressed', 'true')
+  await expect(art.locator('.fossil-cell[data-dimmed="false"]')).toHaveCount(8)
+  await expect(art.locator('.fossil-cell[data-dimmed="true"]')).toHaveCount(stripes - 8)
+  const cells = await art.locator('.fossil-cell[data-dimmed="false"]').evaluateAll(nodes => nodes.map(node => Number(node.getAttribute('data-cell'))))
+  expect(cells.every(cell => cell < 32 && cell % 8 < 4)).toBe(true)
+})
+
 test('平板尺寸的手记没有空白左栏，选择切换后不溢出', async ({ page }) => {
   await page.setViewportSize({ width: 700, height: 1000 })
   await page.goto(`/#specimen/v1/2026-09-28/${ringWithBranches}`)

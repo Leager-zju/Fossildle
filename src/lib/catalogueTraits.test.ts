@@ -125,6 +125,18 @@ describe('扩展结构图鉴', () => {
     flower[18] = true
     expect(has(flower, 'little-cross')).toBe(false)
   })
+  it('“任意窗口”与“存在一个”类结构只标记最先命中的一处，不铺满全部命中区块', () => {
+    const block = stamp(['####', '####', '####', '####'], 2, 2)
+    expect(traitCells(block, 'crystal-square')).toEqual(new Set([18, 19, 20, 26, 27, 28, 34, 35, 36]))
+    const stripes = stamp(['########', '........', '########', '........'], 0, 0)
+    expect(stripes.filter(Boolean)).toHaveLength(16)
+    const ribbed = [...traitCells(stripes, 'ribbed')]
+    expect(ribbed).toHaveLength(8)
+    expect(ribbed.every(i => stripes[i] && i < 32 && i % 8 < 4)).toBe(true)
+    const left = stamp(['#.', '##'], 0, 0)
+    const right = stamp(['#.', '##'], 4, 4)
+    expect(traitCells(left.map((cell, i) => cell || right[i]), 'elbow')).toEqual(new Set([0, 8, 9]))
+  })
   it('长卷排除分叉和闭环，角点按两条边计算', () => {
     expect(has(catalogueExamples.eightfold, 'living-thread')).toBe(false)
     const fork = [...catalogueExamples['living-thread']]

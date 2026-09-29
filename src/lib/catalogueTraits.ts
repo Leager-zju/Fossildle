@@ -192,26 +192,31 @@ export function detectCatalogue(board: Board, components: number[][], holes: num
   mark('tiled-quarters', count < 64 && board.every((value, i) => value === board[Math.floor(i / 8) % 4 * 8 + i % 4]))
 
   for (const { id, patterns } of compiledPatterns) {
-    const cells = new Set<number>()
-    for (const pattern of patterns) {
-      const mask = (1 << pattern.width) - 1
-      for (let y = 0; y <= 8 - pattern.height; y++) for (let x = 0; x <= 8 - pattern.width; x++) {
+    // 「任意 N×M 窗口」类结构可能有多处区块同时满足条件，只保留最靠上、最靠左的一处作为证据。
+    let match: readonly number[] | undefined
+    for (let y = 0; y < 8 && !match; y++) for (let x = 0; x < 8 && !match; x++) {
+      for (const pattern of patterns) {
+        if (y + pattern.height > 8 || x + pattern.width > 8) continue
+        const mask = (1 << pattern.width) - 1
         const shift = 8 - pattern.width - x
         if (pattern.rows.every((row, dy) => ((rowBits[y + dy] >> shift) & mask) === row)) {
-          pattern.cells.forEach(([dx, dy]) => cells.add((y + dy) * 8 + x + dx))
+          match = pattern.cells.map(([dx, dy]) => (y + dy) * 8 + x + dx)
+          break
         }
       }
     }
-    if (cells.size) found.set(id, [...cells])
+    if (match) found.set(id, match)
   }
   for (const { id, patterns } of componentPatterns) {
-    const cells: number[] = []
+    // 「存在一个独立的 N 格遗骨」同理，只标记最先找到的那一块。
     for (const component of components) {
       if (component.length !== patterns[0].cells.length) continue
       const left = Math.min(...component.map(i => i % 8)), top = Math.min(...component.map(i => Math.floor(i / 8)))
-      if (patterns.some(pattern => pattern.cells.every(([x, y]) => left + x < 8 && top + y < 8 && component.includes((top + y) * 8 + left + x)))) cells.push(...component)
+      if (patterns.some(pattern => pattern.cells.every(([x, y]) => left + x < 8 && top + y < 8 && component.includes((top + y) * 8 + left + x)))) {
+        found.set(id, [...component])
+        break
+      }
     }
-    if (cells.length) found.set(id, cells)
   }
   const rowsFull = rowCounts.filter(value => value === 8).length
   const columnsFull = columnCounts.filter(value => value === 8).length

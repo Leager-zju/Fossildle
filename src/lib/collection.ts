@@ -1,4 +1,4 @@
-import { fromHex, generateFossil, GENERATOR_VERSION, toHex, type GeneratorVersion } from './engine'
+import { fromHex, generateFossil, GENERATOR_VERSION, toHex, type Board, type GeneratorVersion } from './engine'
 
 export const STORAGE_KEY = 'fossildle.collection.v1'
 export interface Specimen {
@@ -51,17 +51,35 @@ export function readCollection(): Collection {
 export function saveCollection(collection: Collection) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(collection))
 }
-export function discover(collection: Collection, date: string): { collection: Collection; specimen: Specimen } {
+export function discover(collection: Collection, date: string, board?: Board): { collection: Collection; specimen: Specimen } {
   if (!validDate(date)) throw new Error('无效的发现日期。')
   const existing = collection.specimens.find(item => item.date === date)
   if (existing) return { collection, specimen: existing }
-  const board = generateFossil()
-  const specimen: Specimen = { date, hex: toHex(board), version: GENERATOR_VERSION, favorite: false }
+  const specimen: Specimen = { date, hex: toHex(board ?? generateFossil()), version: GENERATOR_VERSION, favorite: false }
   return { collection: { ...collection, specimens: [...collection.specimens, specimen].sort((a, b) => a.date.localeCompare(b.date)) }, specimen }
 }
 export function sameSpecimen(a: Specimen, b: Specimen): boolean {
   return a.date === b.date && a.hex === b.hex && a.version === b.version
 }
+// 云端同步时把两份藏馆并起来：同一天两处都有时以云端图案为准（云端是账号的共享事实），
+// 珍藏标记取并集；只有本地存在的日期直接补入。身份沿用云端，保证多设备一致。
+export function mergeCollections(local: Collection, remote: Collection): { collection: Collection; added: number; overwritten: number } {
+  const byDate = new Map(remote.specimens.map(item => [item.date, item] as const))
+  let added = 0
+  let overwritten = 0
+  for (const item of local.specimens) {
+    const existing = byDate.get(item.date)
+    if (!existing) {
+      byDate.set(item.date, item)
+      added++
+      continue
+    }
+    if (existing.hex !== item.hex || existing.version !== item.version) overwritten++
+    byDate.set(item.date, { ...existing, favorite: existing.favorite || item.favorite })
+  }
+  return { collection: { schemaVersion: 1, visitorId: remote.visitorId, specimens: [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date)) }, added, overwritten }
+}
+
 export function specimenHash(specimen: Specimen): string {
   return `#specimen/v${specimen.version}/${specimen.date}/${specimen.hex}`
 }

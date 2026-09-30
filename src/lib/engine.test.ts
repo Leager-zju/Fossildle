@@ -1,10 +1,19 @@
 import { describe, expect, it, vi } from 'vitest'
-import { analyzeFossil, calculateScore, evaluateTraits, fromHex, generateFossil, generateLegacyFossil, randomSource, toHex } from './engine'
+import { analyzeFossil, calculateScore, evaluateTraits, fromHex, generateFossil, generateLegacyFossil, generateSeededFossil, randomSource, toHex } from './engine'
 
 const grid = (rows: string[]) => rows.flatMap(row => [...row].map(c => c === '#'))
 const ring = grid(['........', '........', '..####..', '..#..#..', '..#..#..', '..####..', '........', '........'])
 
 describe('化石生成与结构规则', () => {
+  it('每日排行的种子生成可复现，且与校准脚本使用同一派生方式', () => {
+    expect(generateSeededFossil(20260930)).toEqual(generateSeededFossil(20260930))
+    expect(generateSeededFossil(20260930)).not.toEqual(generateSeededFossil(20261001))
+    const derived = (seed: number) => {
+      const rng = randomSource(seed >>> 0)
+      return generateFossil(Uint8Array.from({ length: 8 }, () => Math.floor(rng() * 256)))
+    }
+    for (const seed of [0, 1, 4242, 0xf0551d1e, 4294967295]) expect(generateSeededFossil(seed)).toEqual(derived(seed))
+  })
   it('旧生成器冻结，种子仍可复现历史模型', () => {
     expect(generateLegacyFossil(123456)).toEqual(generateLegacyFossil(123456))
     expect(generateLegacyFossil(123456)).not.toEqual(generateLegacyFossil(654321))

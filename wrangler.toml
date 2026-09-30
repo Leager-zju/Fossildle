@@ -1,0 +1,23 @@
+# 每日排行后端（Cloudflare Workers + D1）。部署步骤见 readme「每日排行」一节。
+# 放在仓库根目录，所有 wrangler 命令（deploy / secret / d1 …）无需额外参数即可运行。
+name = "fossildle-rank"
+main = "worker/index.ts"
+compatibility_date = "2026-09-01"
+
+# 允许访问的来源：正式站点 + 本地预览。多个用逗号分隔。
+[vars]
+ALLOWED_ORIGIN = "https://leager-zju.github.io,http://127.0.0.1:4173,http://localhost:4173"
+
+# 每天 UTC 00:10 清理超出保留期的历史数据（按天分桶，本身不需要“重置”任务）。
+[triggers]
+crons = ["10 0 * * *"]
+
+[observability]
+enabled = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "fossildle-rank"
+# 用 `npx wrangler d1 create fossildle-rank` 生成的 ID 替换下面这行占位值。
+database_id = "a45e084c-9513-427b-9ae8-881c0c3b34a6"
+migrations_dir = "worker/migrations"

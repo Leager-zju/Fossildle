@@ -3,7 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "engines": { "node": ">=22.12.0" },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
@@ -12,7 +14,12 @@
     "test:watch": "vitest",
     "test:e2e": "PLAYWRIGHT_BROWSERS_PATH=.playwright playwright test",
     "test:browser": "PLAYWRIGHT_BROWSERS_PATH=.playwright playwright install chromium",
-    "calibrate": "tsx scripts/calibrate.ts"
+    "calibrate": "tsx scripts/calibrate.ts",
+    "worker:dev": "wrangler dev",
+    "worker:deploy": "wrangler deploy",
+    "worker:secret": "wrangler secret put",
+    "worker:migrate": "wrangler d1 migrations apply fossildle-rank --remote",
+    "worker:migrate:local": "wrangler d1 migrations apply fossildle-rank --local"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
@@ -28,6 +35,7 @@
     "tsx": "^4.20.6",
     "typescript": "~5.9.3",
     "vite": "8.3.1",
-    "vitest": "5.0.2"
+    "vitest": "5.0.2",
+    "wrangler": "^4.144.0"
   }
 }

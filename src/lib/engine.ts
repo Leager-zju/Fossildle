@@ -108,6 +108,13 @@ export function generateFossil(bytes: Uint8Array = crypto.getRandomValues(new Ui
   return Array.from({ length: 64 }, (_, index) => (bytes[Math.floor(index / 8)] & (1 << (7 - index % 8))) !== 0)
 }
 
+// 每日排行的确定性生成：同一个 seed 在浏览器与服务端得到同一枚化石。
+// 派生方式与 scripts/calibrate.ts 完全一致，因此现有概率与稀有度数据无需重新校准。
+export function generateSeededFossil(seed: number): Board {
+  const rng = randomSource(seed >>> 0)
+  return generateFossil(Uint8Array.from({ length: 8 }, () => Math.floor(rng() * 256)))
+}
+
 export function generateLegacyFossil(seed: number): Board {
   const rng = randomSource(seed)
   const int = (min: number, max: number) => min + Math.floor(rng() * (max - min + 1))

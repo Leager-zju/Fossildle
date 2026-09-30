@@ -16,7 +16,8 @@ export default defineConfig({
     { name: 'mobile', use: { ...devices['iPhone 13'], defaultBrowserType: 'chromium' } },
   ],
   webServer: {
-    command: 'npm run build && node scripts/serve-pages.mjs',
+    // 端到端构建指向测试用的排行服务地址，测试里用 page.route 拦截 https://rank.test/**。
+    command: 'VITE_FOSSILDLE_API=https://rank.test npm run build && node scripts/serve-pages.mjs',
     url: `http://127.0.0.1:${port}`,
     reuseExistingServer: false,
     timeout: 30000,

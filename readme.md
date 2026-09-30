@@ -198,6 +198,8 @@ npm run worker:deploy                     # 创建并部署 Worker（得到 http
 npm run worker:secret -- SERVER_SECRET    # 提示后粘贴一串长随机值，用于派生每日种子
 ```
 
+> 大陆网络无法直连 `*.workers.dev`，本项目的 Worker 通过 `wrangler.toml` 里的 `[[routes]]` 绑定在 `rank.fossildle.xyz`。首次部署前请先完成该域名的 Cloudflare 接入（见下文「墙内可达性」），否则 `worker:deploy` 会因找不到 zone 失败。
+
 也可以等价地写成 `npx wrangler deploy` / `npx wrangler secret put SERVER_SECRET`。
 
 本地联调：`printf 'SERVER_SECRET=local-dev-secret\n' > .dev.vars` 后运行 `npm run worker:migrate:local` 与 `npm run worker:dev`，即可在 `http://127.0.0.1:8787` 上跑真实的 Worker + 本地 D1（`.dev.vars` 已在 `.gitignore` 中）。
@@ -210,7 +212,16 @@ VITE_FOSSILDLE_API=https://fossildle-rank.<账号>.workers.dev npm run build
 
 未设置 `VITE_FOSSILDLE_API` 时，「每日排行」页会提示未配置，其余功能完全不受影响。本项目已部署的地址写在 `.github/workflows/deploy.yml` 的构建环境变量里；本地开发可复制 `.env.example` 为 `.env.local` 后直接启用。
 
-如果正式站点换成了自定义域名，记得把该来源加进 `wrangler.toml` 的 `ALLOWED_ORIGIN`（多个用逗号分隔）并重新 `npm run worker:deploy`，否则浏览器会因跨域被拦下。
+**墙内可达性（重要）**：`*.workers.dev` 在中国大陆通常被 DNS 污染与连接重置，浏览器表现为 `ERR_CONNECTION_CLOSED`，因此服务绑定在自定义域名 `rank.fossildle.xyz` 上（配置见 `wrangler.toml` 的 `[[routes]]`）。首次启用需要：
+
+1. 在 Cloudflare 添加站点 `fossildle.xyz`（免费版即可），记下分配的两个 NS。
+2. 到域名商处把 NS 改成这两个，等待生效（`dig +short NS fossildle.xyz` 能看到 `*.ns.cloudflare.com` 即完成）。
+3. 执行 `npm run worker:deploy` 绑定域名（若此时 zone 还没生效会报找不到 zone，旧版本不受影响，等 NS 生效后重试即可）。
+4. 浏览器打开 `https://rank.fossildle.xyz/api/health`，返回 `{"ok":true,…}` 即成功。
+
+`ALLOWED_ORIGIN` 目前是 `"*"`（本服务只用 `Authorization` 头鉴权、不带 cookie，放开来源不会被冒用身份），所以换域名不需要再动 Worker 配置；想收紧就把它改回具体域名。
+
+如果正式站点换成了自定义域名，同样记得把该来源加进 `ALLOWED_ORIGIN`（多个用逗号分隔）并重新 `npm run worker:deploy`。
 
 ### 免费额度与边界
 

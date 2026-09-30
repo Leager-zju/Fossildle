@@ -201,6 +201,8 @@ export default function App() {
   }, [account, initializing, syncNow])
 
   // 每日排行：登录且开启参与时，先向服务端领取当日种子，用同一枚化石参与榜单。
+  // 服务不可达时每次开箱都弹提示会很吵，因此每个会话只提醒一次，细节留在「每日排行」页。
+  const rankNoticeRef = useRef(false)
   const seededBoard = async (discoveryDate: string): Promise<Board | null> => {
     const current = accountRef.current
     if (!current || current.rankOptIn === false || !rankingEnabled() || rankingFor(discoveryDate)) return null
@@ -213,7 +215,10 @@ export default function App() {
       setRanked(rememberDay(seed.date, { seed: seed.seed }))
       return generateSeededFossil(seed.seed)
     } catch (error) {
-      setToast(`未能领取排行种子：${error instanceof Error ? error.message : '请稍后再试'}；本次仍可正常发现，只是不计入排行榜。`)
+      if (!rankNoticeRef.current) {
+        rankNoticeRef.current = true
+        setToast(`未能领取排行种子：${error instanceof Error ? error.message : '请稍后再试'}；本次仍可正常发现，不计入排行榜。`)
+      }
       return null
     }
   }

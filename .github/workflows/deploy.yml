@@ -30,9 +30,10 @@ jobs:
         run: npm test
       - name: Build static site
         run: npm run build
-        # 「每日排行」的 Worker 地址；未设置时该页会提示未配置，其余功能不受影响。
+        # 「每日排行」的 Worker 地址（自定义域名，避免 *.workers.dev 在国内被阻断）；
+        # 未设置时该页会提示未配置，其余功能不受影响。
         env:
-          VITE_FOSSILDLE_API: https://fossildle-rank.fossildle.workers.dev
+          VITE_FOSSILDLE_API: https://rank.fossildle.xyz
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact

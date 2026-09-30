@@ -56,14 +56,14 @@ describe('排行接口', () => {
     const { requestSeed, API_BASE } = await load(() => respond({ date: '2026-09-30', seed: 7, replay: false, generatorVersion: 2, scoringVersion: 5 }))
     expect(API_BASE).toBe('https://rank.test')
     expect(await requestSeed('ghp_token')).toMatchObject({ seed: 7 })
-    expect(calls[0]).toMatchObject({ url: 'https://rank.test/play', method: 'POST' })
+    expect(calls[0]).toMatchObject({ url: 'https://rank.test/api/play', method: 'POST' })
     expect(calls[0].headers.Authorization).toBe('Bearer ghp_token')
   })
   it('提交成绩只发送日期，服务端返回分数与名次', async () => {
     const { submitScore } = await load(() => respond({ date: '2026-09-30', score: 55, rarityId: 'rare', rank: 2, players: 9, submittedAt: '2026-09-30T09:00:00.000Z' }))
     expect(await submitScore('ghp_token', '2026-09-30')).toMatchObject({ score: 55, rank: 2, players: 9, date: '2026-09-30' })
     expect(JSON.parse(calls[0].body!)).toEqual({ date: '2026-09-30' })
-    expect(calls[0].url).toBe('https://rank.test/play/submit')
+    expect(calls[0].url).toBe('https://rank.test/api/play/submit')
   })
   it('服务端返回残缺数据时视为失败', async () => {
     const { submitScore } = await load(() => respond({ date: '2026-09-30' }))
@@ -72,7 +72,7 @@ describe('排行接口', () => {
   it('榜单缺失字段时按空榜处理', async () => {
     const { fetchBoard } = await load(() => respond({ date: '2026-09-30' }))
     expect(await fetchBoard('2026-09-30')).toEqual({ date: '2026-09-30', players: 0, top: [], me: null })
-    expect(calls[0].url).toBe('https://rank.test/leaderboard?date=2026-09-30')
+    expect(calls[0].url).toBe('https://rank.test/api/leaderboard?date=2026-09-30')
   })
   it('各类失败给出对应提示', async () => {
     const unauthorized = await load(() => respond({ error: 'x' }, 401))

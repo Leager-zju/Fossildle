@@ -26,12 +26,12 @@ async function mockRank(page: Page, state: RankMock) {
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors })
     const path = new URL(request.url()).pathname
     if (state.fail) return reply(route, { error: '排行服务暂时不可用。' }, 500)
-    if (path === '/play') { state.played++; return reply(route, { date: today, seed: 20260930, replay: state.played > 1, generatorVersion: 2, scoringVersion: 5 }) }
-    if (path === '/play/submit') {
+    if (path === '/api/play') { state.played++; return reply(route, { date: today, seed: 20260930, replay: state.played > 1, generatorVersion: 2, scoringVersion: 5 }) }
+    if (path === '/api/play/submit') {
       state.submissions.push(request.postData() ?? '')
       return reply(route, { date: today, score: 61, rarityId: 'rare', rank: 3, players: 12, submittedAt: `${today}T09:00:00.000Z`, generatorVersion: 2, scoringVersion: 5 })
     }
-    if (path === '/leaderboard') {
+    if (path === '/api/leaderboard') {
       const me = { rank: 3, playerId: 'me', score: 61, rarityId: 'rare', submittedAt: `${today}T09:00:00.000Z` }
       const others = [
         { rank: 1, playerId: 'leager-zju', score: 88, rarityId: 'archival', submittedAt: `${today}T00:30:00.000Z` },

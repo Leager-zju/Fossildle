@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { analyzeFossil, calculateScore, evaluateTraits, generateSeededFossil, GENERATOR_VERSION, SCORING_VERSION } from '../src/lib/engine'
+import { BOARD_PATH, HEALTH_PATH, SEED_PATH, SUBMIT_PATH } from '../src/lib/ranking'
 import { createApp, purge, RETENTION_DAYS, type AppDeps } from './app'
 import { memoryStore, type RankStore } from './store'
 
@@ -146,6 +147,19 @@ describe('榜单', () => {
   })
 })
 
+describe('与前端共用的接口路径', () => {
+  it('客户端使用的路径都由后端处理，缺少 /api 前缀的旧路径会 404', async () => {
+    const app = build()
+    // 未带令牌时应当被鉴权拦下（401）而不是路由未命中（404）。
+    expect((await app.raw(SEED_PATH, { method: 'POST' })).status).toBe(401)
+    expect((await app.raw(SUBMIT_PATH, { method: 'POST' })).status).toBe(401)
+    expect((await app.raw(BOARD_PATH)).status).toBe(200)
+    expect((await app.raw(HEALTH_PATH)).status).toBe(200)
+    expect((await app.raw('/play', { method: 'POST' })).status).toBe(404)
+    expect((await app.raw('/leaderboard')).status).toBe(404)
+  })
+})
+
 describe('跨域与清理', () => {
   it('仅对白名单来源返回 CORS 头，预检直接放行', async () => {
     const app = build()
@@ -156,6 +170,12 @@ describe('跨域与清理', () => {
     expect(preflight.headers.get('Access-Control-Allow-Headers')).toContain('authorization')
     const blocked = await app.raw('/api/leaderboard', { headers: { Origin: 'https://evil.example' } })
     expect(blocked.headers.get('Access-Control-Allow-Origin')).toBeNull()
+  })
+  it('白名单写 * 时对任意来源回显 CORS 头', async () => {
+    const handle = createApp({ store: memoryStore(), secret: 'test-secret', allowedOrigins: ['*'], now: () => new Date(`${DATE}T12:00:00.000Z`) })
+    const response = await handle(new Request(`https://rank.test${HEALTH_PATH}`, { headers: { Origin: 'https://any.example' } }))
+    expect(response.status).toBe(200)
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://any.example')
   })
   it('定时清理只删除保留期之外的数据', async () => {
     const store = memoryStore()
